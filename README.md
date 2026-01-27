@@ -1,4 +1,4 @@
-# MatExtractAI 🧠📄  
+# MatExtractAI 
 **AI-powered Extraction & Validation of Materials Science Research Papers**
 
 MatExtractAI is an end-to-end system that converts unstructured **materials science research PDFs** into **structured, evidence-backed JSON** using deterministic parsing and local LLM-based agents.
@@ -126,3 +126,6 @@ python src/run_pipeline_b.py
 - Dataset-level validation
 - UI dashboard
 - Support for other scientific fields
+
+## Author
+Amaljosh Maadhav J
