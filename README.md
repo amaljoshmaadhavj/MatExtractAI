@@ -4,7 +4,6 @@
 
 [![Python Version](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)](https://github.com)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Last Updated](https://img.shields.io/badge/Updated-2026-blue.svg)]()
 
 ## Overview
@@ -82,18 +81,18 @@ Final Output with Confidence Metrics
 ```
 MatExtractAI/
 │
-├── 📁 src/                      # Core source code
-│   ├── agents/                  # 🧠 LLM extraction agents (composition, mechanics, etc.)
-│   ├── evaluation/              # ✅ Validation & confidence scoring logic
-│   ├── ingest/                  # 📥 PDF ingestion & preprocessing
-│   ├── utils/                   # 🔧 Shared utilities & helpers
-│   ├── main.py                  # ⚡ Pipeline A entrypoint
-│   └── run_pipeline_b.py        # 🔍 Pipeline B validation runner
+├── 📁 src/                     
+│   ├── agents/                  # LLM extraction agents (composition, mechanics, etc.)
+│   ├── evaluation/              # Validation & confidence scoring logic
+│   ├── ingest/                  # PDF ingestion & preprocessing
+│   ├── utils/                   # Shared utilities & helpers
+│   ├── main.py                  # Pipeline A entrypoint
+│   └── run_pipeline_b.py        # Pipeline B validation runner
 │
 ├── 📁 data/
-│   └── raw_pdfs/                # 📄 Input research papers (PDF format)
+│   └── raw_pdfs/                #Input research papers (PDF format)
 │
-├── 📁 output/                   # 📊 Generated structured outputs
+├── 📁 output/                   
 │   ├── *_page_text.json         # Raw text extraction
 │   ├── *_sections.json          # Section segmentation
 │   ├── *_tables.json            # Table extraction
@@ -101,9 +100,9 @@ MatExtractAI/
 │   ├── *_evaluated.json         # Pipeline B validation results
 │   └── *.csv                    # Cleaned table exports
 │
-├── requirements.txt             # 📦 Python dependencies
-├── README.md                    # 📖 This file
-└── .gitignore                   # 🚫 Git ignores
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
+└── .gitignore                   # Git ignores
 ```
 
 
