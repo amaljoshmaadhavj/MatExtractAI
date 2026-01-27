@@ -1,0 +1,198 @@
+Received: 25 November 2013 / Accepted: 14 April 2014 / Published online: 7 May 2014,
+# Society for Experimental Mechanics 2014,
+"Abstract Tension
+and
+compression
+experiments
+on mag-","Keywords Strength differential effect
+. Differential"
+"nesium rolled
+sheets
+and
+extruded
+products
+of AZ31","hardening . Anisotropy . Sheet metal
+. Magnesium alloy"
+"(Mg + 3%Al + 1%Zn)
+and
+ZE10
+(Mg + 1%Zn + 0.3%Ce",
+"based misc metal) were
+performed
+at
+room temperature.",
+"The
+tests were
+conducted
+along
+the
+longitudinal
+and
+the",
+"transverse
+direction
+to
+quantify
+the
+in-plane
+anisotropy.",Introduction
+"Samples
+built
+from adhesively-bonded
+layers
+of
+sheets",
+"were used for
+in-plane
+as well
+as
+through-thickness
+com-","Motivated by the growing demand for lightweight materials,"
+"pression
+testing.
+It was
+verified
+that
+this
+simple
+testing",research on magnesium and its alloys has been getting more
+"method leads
+to identical
+results
+as using comb-like dies","attention as magnesium is
+the lightest metal
+in use for
+the"
+"and equi-biaxial bulge
+testing,
+respectively.
+In the
+case of","production of structural components
+in the automotive and"
+"uniaxial
+loading,
+the
+longitudinal
+and
+transverse
+strain","aircraft industry. Despite the high strength-to-weight ratio, the"
+components were measured using independent extensome-,application of wrought magnesium (i.e. sheets and extruded
+"ters.
+R-values were
+calculated
+from these
+signals.
+The",profiles) to lightweight structures is restricted due to its pro-
+"mechanical
+responses were correlated to the microstructure","nounced anisotropy, the tension-compression asymmetry (the"
+"and the
+texture. The
+recorded differences between tensile","so-called strength differential effect, SD effect)
+[20, 21] as"
+"and
+compressive
+response
+reveal
+the
+strength
+differential","well as its comparably poor
+formability, especially at
+room"
+"effect
+of
+the materials. The
+distortional
+character
+of
+the","temperature [20, 14]. Existing applications are mainly based"
+"plastic
+behaviour
+is
+evidenced
+through
+their
+responses
+to","on cast products. The use of
+sheets
+for
+the fabrication of"
+"equi-biaxial
+tensile
+loading. Significant
+differences
+in
+the",components and structures can still be expanded in an attempt
+"compressive responses of
+the two alloys were identified by",to use the full light-weight potential of metallic magnesium.
+"comparing the
+respective hardening rates.","The reason for
+the specific mechanical behaviour
+lies in"
+,"the
+hexagonal
+close-packed
+(hcp)
+lattice
+structure which"
+,"restricts
+the
+number of deformation mechanisms
+in
+com-"
+D. Steglich (*) : X. Tian,
+,parison to cubic metals. Therefore the ductility as well as
+"Helmholtz-Zentrum Geesthacht, Institute of Materials Research,",
+,"the
+formability
+of magnesium sheets
+is
+limited, which"
+"Materials Mechanics/ACE-Centre, Max-Planck-Str. 1,",
+,"partly
+confines
+the whole
+process
+chain,
+i.e.
+the
+rolling"
+"21502 Geesthacht, Germany",
+e-mail: dirk.steglich@hzg.de,"procedures
+for magnesium sheets,
+the
+forming procedures"
+,"of
+structural components and subsequently the mechanical"
+J. Bohlen,
+,"properties
+of
+the
+resulting
+parts.
+The
+application
+of"
+"Helmholtz-Zentrum Geesthacht, Institute of Materials Research,",
+,"wrought magnesium alloys
+requires
+reliable
+simulation"
+"Magnesium Innovations Centre MagIC, Max-Planck-Str. 1,",
+"21502 Geesthacht, Germany","tools
+for predicting the
+forming capabilities,
+the
+structural"
+,"response to mechanical
+loads and the lifetime of the compo-"
+T. Kuwabara,
+,nent. The respective constitutive models have to account for
+"Division of Advanced Mechanical Systems Engineering, Institute",
+,"the mentioned
+peculiarities
+of
+the mechanical
+behaviour,"
+"of Engineering, Tokyo University of Agriculture and Technology,",
+"2-24-16, Nakacho, Koganei-shi, Tokyo 184-8588, Japan","demanding for
+sophisticated simulation techniques."

@@ -1,0 +1,44 @@
+{
+  "processing_routes": [
+    {
+      "material_form": "rolled sheet",
+      "condition": "O-temper",
+      "thickness_mm": 2,
+      "steps": [
+        {
+          "step": "annealed",
+          "temperature_C": null,
+          "time_h": null
+        },
+        {
+          "step": "rolling",
+          "temperature_C": null,
+          "time_h": null
+        }
+      ],
+      "evidence": {
+        "snippet": "The two alloys are used in form of magnesium sheets in an annealed condition (O-temper) with a thickness of 2 mm."
+      }
+    },
+    {
+      "material_form": "extruded profile",
+      "condition": null,
+      "thickness_mm": 1.7,
+      "steps": [
+        {
+          "step": "homogenization anneal",
+          "temperature_C": 350,
+          "time_h": 15
+        },
+        {
+          "step": "extrusion",
+          "temperature_C": 300,
+          "time_h": null
+        }
+      ],
+      "evidence": {
+        "snippet": "Gravity cast slabs ... homogenization annealed for 15 h at 350 °C and extruded at 300 °C ..."
+      }
+    }
+  ]
+}

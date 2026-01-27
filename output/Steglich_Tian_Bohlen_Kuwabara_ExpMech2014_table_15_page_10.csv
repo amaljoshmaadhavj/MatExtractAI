@@ -1,0 +1,143 @@
+1256,"Exp Mech
+(2014) 54:1247–1258"
+"sheets, see Fig. 10. The first stage reflects the elastic-plastic","regime, but not
+in tension. Extension twinning causes a re-"
+transition. In the second stage of progressive hardening both,orientation of the basal plane by 86.3° [43] in a part of the grain
+"materials follow the same characteristic. In stage 3, all AZ31",and therefore strongly influences the global deformation mode.
+"materials as well as
+the extruded ZE10 material
+feature a","This effect has also been shown experimentally for AR31B,"
+"strong increase in hardening. Different from that, ZE10 rolled",see [30] as well as numerically by using the visco-plastic self-
+"material follows a trend similar to that of stage 2. Finally,
+in","consistent scheme for the same material, see [41]."
+"stage four work hardening is saturating, approaching a hori-",Magnesium alloys generally show a rate dependent me-
+"zontal slope prior to failure. Except for ZE10 rolled sheets, all","chanical behaviour,
+in particular at elevated temperatures."
+materials investigated show a pronounced progressive work,Variations in the yield strength with strain rate where different
+"hardening characteristic. This might be beneficial
+for
+some",deformation mechanisms are active were observed [32]. All
+structural applications.,tests reported here were conducted with an initial strain rate
+While the differences in the mechanical responses of uniaxial,"being less or equal 10−3 s−1. For
+the temperature and these"
+tension and compression can easily be explained on the basis of,"loading rates the rate effects appear negligible, see also tests"
+"the propensity to activate basal slip and twinning, the prismatic","reported elsewhere, e.g. [33]."
+slip is to be considered as an important deformation mechanism,"For
+the calibration of yield surfaces the instantaneous r-"
+to fulfil the requirements for polycrystalline plastic deformation,"value is commonly preferred, see [30]
+for a good example."
+"[1]. Specifically, it has been shown in case of biaxial testing that","Once
+the normality rule is used for
+computing the
+strain"
+the abnormal hardening is caused by the delayed activation of,"increments from the plastic potential, the ratio"
+prismatic slip under equi-biaxial stresses acting perpendicular to,
+the basal plane [19]. As all tested products show a (more the less,
+,ε pl
+,
+,"w
+r0 ¼"
+"pronounced) basal
+texture,
+this effect
+is present
+in rolled and",ð4Þ
+,ε pl
+,t
+extruded products of both alloys. The absence of prismatic slip,
+"causes an early failure of
+the material by shear separation on",
+"inclined planes [38].
+It
+is worth to mention that
+this type of","gives the normal to the yield surface. Hence, the dependency"
+biaxial hardening cannot be described by a plasticity law based,"of plastic width and thickness
+strain was
+fitted by cubic"
+on the von Mises yield criterion. A model accounting for,"functions;
+their
+first derivatives are shown as instantaneous"
+differential hardening is required instead.,"r-values r´
+in Fig. 11. The cumulative and instantaneous r-"
+The presented experiments yield a non-constant r-value in,"values do not coincide, because the planar anisotropy of the"
+compression in the range of 0.2–0.4. They are significantly,"materials is evolving. Typically, the instantaneous r-values are"
+"lower
+that
+the respective r-values
+in tension.
+If ND is
+the",higher compared to their cumulative counterparts. This has
+"“thickness-direction” of
+the sheet and extruded product,
+re-","been reported already for
+the case of
+tensile loads [30] and"
+"spectively, the material flow is favored in ND rather than in the",could be confirmed in the present study. The same trend is
+"other non-compressed direction. Thus
+the thickness
+strain, εt,","observed in case of compressive loads, however,
+the differ-"
+"is significantly larger
+than the width strain of
+the compressed",ence between instantaneous and cumulative r-value appears
+"sample, εw. The reason for
+this behaviour
+lies in the twinning","more pronounced, compare Fig. 6 and the respective figure in"
+"activity, which is pronounced in the RD and TD compression",[30]. This effect is related to the progressive increase of the r-
+,value with strain in case of compression and hence has to be
+,considered in parameter identification procedures.
+,"Both, in Figs. 6 and 8, only the inelastic portion of the total"
+"III
+IV
+II
+I",
+,
+6000,"strains is considered, see Equation (2).
+It
+is assumed that –"
+AZ31 RD,
+AZ31 TD,independently of the magnitude of strain – unloading would
+5000,
+,
+AZ31 ED,be purely elastic and follow the initial Young’s modulus. This
+ZE10 RD,
+"ZE10 TD
+4000","might not be the case, as previous
+investigation reveal a"
+ZE10 ED,
+/d [MPa],"decrease of
+the elastic slope after pre-straining the material"
+3000,
+,"in tension [5]. A quantification of
+the recoverable inelastic"
+,
+d,"strain, as conducted in [16] for steel and aluminium, was not"
+2000,
+,"performed
+here.
+In
+an
+attempt
+to
+quantify
+the
+effect
+of"
+1000,"changing E-modulus,
+two additional curves are included in"
+,Fig. 11(a): One representing the accumulated r-value assuming
+,
+0,"a decrease of the initial Young’s modulus by 15 %, another by"
+"0,00
+0,02
+0,04
+0,06
+0,08
+0,10
+0,12
+0,14",
+plastic strain,neglecting the elastic strain in Equation (1). From this figure it
+,"becomes obvious that
+in both cases the calculated r-value is"
+Fig. 10 Rate of hardening during compression for AZ31 and ZE10 rolled,
+sheets and extruded profile along RD and TD (sheet) and ED (extrudates),"inside the confidence band established by repeated tests, see"

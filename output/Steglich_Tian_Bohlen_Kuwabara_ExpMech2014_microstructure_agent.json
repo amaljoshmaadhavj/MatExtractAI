@@ -1,0 +1,24 @@
+{
+  "microstructures": [
+    {
+      "alloy": "AZ31",
+      "material_form": "rolled sheet",
+      "avg_grain_size_um": 15.0,
+      "recrystallized": true,
+      "grain_morphology": "equi-axed",
+      "texture": "strong basal texture",
+      "evidence": {
+        "snippet": "The sheets reveal a fully recrystallized microstructure resulting in a comparable average grain size of 15 μm."
+      }
+    },
+    {
+      "alloy": "ZE10",
+      "material_form": null,
+      "avg_grain_size_um": null,
+      "recrystallized": null,
+      "grain_morphology": null,
+      "texture": null,
+      "evidence": {}
+    }
+  ]
+}

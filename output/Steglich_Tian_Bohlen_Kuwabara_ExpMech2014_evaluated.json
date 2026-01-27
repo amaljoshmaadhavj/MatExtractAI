@@ -1,0 +1,50 @@
+[
+  {
+    "record": {
+      "alloy": "AZ31",
+      "material_form": "rolled sheet",
+      "avg_grain_size_um": 15.0,
+      "recrystallized": true,
+      "grain_morphology": "equi-axed",
+      "texture": "strong basal texture",
+      "evidence": {
+        "snippet": "The sheets reveal a fully recrystallized microstructure resulting in a comparable average grain size of 15 \u00ce\u00bcm."
+      }
+    },
+    "validation": {
+      "checks": {
+        "avg_grain_size_um": "verified",
+        "recrystallized": "semantic",
+        "grain_morphology": "semantic",
+        "texture": "semantic"
+      },
+      "confidence": "high",
+      "verified_ratio": 1.0
+    },
+    "cross_agent_issues": [],
+    "final_confidence": "high"
+  },
+  {
+    "record": {
+      "alloy": "ZE10",
+      "material_form": null,
+      "avg_grain_size_um": null,
+      "recrystallized": null,
+      "grain_morphology": null,
+      "texture": null,
+      "evidence": {}
+    },
+    "validation": {
+      "checks": {
+        "avg_grain_size_um": "missing",
+        "recrystallized": "missing",
+        "grain_morphology": "missing",
+        "texture": "missing"
+      },
+      "confidence": "low",
+      "verified_ratio": 0.0
+    },
+    "cross_agent_issues": [],
+    "final_confidence": "low"
+  }
+]

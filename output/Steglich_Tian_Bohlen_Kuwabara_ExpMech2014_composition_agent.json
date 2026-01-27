@@ -1,0 +1,44 @@
+{
+  "alloys": [
+    {
+      "alloy_name": "AZ31",
+      "composition": [
+        {
+          "element": "Mg",
+          "percent": null
+        },
+        {
+          "element": "Al",
+          "percent": 3
+        },
+        {
+          "element": "Zn",
+          "percent": 1
+        }
+      ],
+      "evidence": {
+        "snippet": "A well-known and widely used wrought magnesium alloy AZ31 (Mg+3 %Al+1 %Zn)"
+      }
+    },
+    {
+      "alloy_name": "ZE10",
+      "composition": [
+        {
+          "element": "Mg",
+          "percent": null
+        },
+        {
+          "element": "Zn",
+          "percent": 1
+        },
+        {
+          "element": "Ce",
+          "percent": 0.3
+        }
+      ],
+      "evidence": {
+        "snippet": "an alloy, ZE10 (Mg+1 %Zn+0.3 %Ce based misc metal)"
+      }
+    }
+  ]
+}
