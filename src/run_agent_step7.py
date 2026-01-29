@@ -1,17 +1,19 @@
 import json
-from pathlib import Path
 from agents.processing_agent import run_processing_agent
-
-
-SECTIONS = Path("output/Steglich_Tian_Bohlen_Kuwabara_ExpMech2014_sections.json")
-OUTFILE = Path("output/Steglich_Tian_Bohlen_Kuwabara_ExpMech2014_processing_agent.json")
+from config import OUTPUT_DIR
 
 
 def main():
-    data = run_processing_agent(SECTIONS)
+    for paper_dir in OUTPUT_DIR.iterdir():
+        sections = paper_dir / f"{paper_dir.name}_sections.json"
+        if not sections.exists():
+            continue
 
-    OUTFILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"✅ Processing Agent output saved to: {OUTFILE.resolve()}")
+        result = run_processing_agent(sections)
+
+        out = paper_dir / f"{paper_dir.name}_processing_agent.json"
+        out.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        print(f"✅ Processing agent done: {paper_dir.name}")
 
 
 if __name__ == "__main__":

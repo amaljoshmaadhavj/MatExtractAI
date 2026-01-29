@@ -85,20 +85,26 @@ MatExtractAI/
 │   ├── agents/                  # LLM extraction agents (composition, mechanics, etc.)
 │   ├── evaluation/              # Validation & confidence scoring logic
 │   ├── ingest/                  # PDF ingestion & preprocessing
-│   ├── utils/                   # Shared utilities & helpers
+│   ├── config.py                # Configuration & path settings
 │   ├── main.py                  # Pipeline A entrypoint
+│   ├── run_agent_step5.py       # Mechanical properties extraction
+│   ├── run_agent_step6.py       # Processing agent
+│   ├── run_agent_step7.py       # Microstructure agent
+│   ├── run_agent_step8.py       # Composition agent
 │   └── run_pipeline_b.py        # Pipeline B validation runner
 │
 ├── 📁 data/
-│   └── raw_pdfs/                #Input research papers (PDF format)
+│   └── raw_pdfs/                # Input: Place your research papers here (PDF format)
 │
 ├── 📁 output/                   
-│   ├── *_page_text.json         # Raw text extraction
-│   ├── *_sections.json          # Section segmentation
-│   ├── *_tables.json            # Table extraction
-│   ├── *_*_agent.json           # Agent-specific extractions
-│   ├── *_evaluated.json         # Pipeline B validation results
-│   └── *.csv                    # Cleaned table exports
+│   └── <paper_name>/            # Output folder per paper
+│       ├── *_sections.json      # Extracted text sections
+│       ├── *_tables.json        # Extracted tables
+│       ├── *_mech_agent.json    # Mechanical properties
+│       ├── *_processing_agent.json  # Processing routes
+│       ├── *_microstructure_agent.json  # Microstructure data
+│       ├── *_composition_agent.json     # Composition data
+│       └── *_evaluated.json    # Final validated output
 │
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # This file
@@ -158,57 +164,114 @@ MatExtractAI/
 ## ▶️ Quick Start Guide
 
 ### Prerequisites
-- Python 3.13 installed
-- Ollama running locally with LLM models loaded
-- Ghostscript installed (for table extraction)
+- Python 3.13+
+- Virtual environment (recommended)
+- Ollama installed with LLM models loaded locally
+- Ghostscript (required by Camelot for table extraction)
 
-### Installation & Execution
+### Installation
 
-#### 1️. Clone & Setup Virtual Environment
 ```bash
-git clone https://github.com/your-org/MatExtractAI.git
+# Clone or navigate to the project
 cd MatExtractAI
 
 # Create virtual environment
 python -m venv .venv
 
-# Activate it
-# On Windows:
+# Activate it (Windows)
 .venv\Scripts\activate
-# On macOS/Linux:
-source .venv/bin/activate
-```
 
-#### 2️. Install Dependencies
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-#### 3️. Prepare Input Data
-Place your PDF files in the `data/raw_pdfs/` directory:
-```bash
-cp your_research_paper.pdf data/raw_pdfs/
+### Usage
+
+#### 1. Prepare Input PDFs
+Place your research papers in **`data/raw_pdfs/`**:
+```
+data/raw_pdfs/
+├── paper1.pdf
+├── paper2.pdf
+└── paper3.pdf
 ```
 
-#### 4. Run Pipeline A (Extraction)
+#### 2. Run Pipeline A - Extraction & Text Processing
 ```bash
 python src/main.py
 ```
-This generates structured JSON files in `output/`
 
-#### 5️. Run Pipeline B (Validation)
+**Example output:**
+```
+Processing PDFs:   0%|                                                      | 0/1 [00:00<?, ?it/s]
+📄 Processing applsci-14-10986-v2
+✅ Saved outputs to C:\Users\admin\MatExtractAI\output\applsci-14-10986-v2
+Processing PDFs: 100%|███████████████████████████████| 1/1 [00:08<00:00,  8.03s/it]
+```
+
+This generates:
+- `*_sections.json` — Extracted text sections (Abstract, Introduction, Methods, Results, etc.)
+- `*_tables.json` — Extracted tables
+
+#### 3. Run Extraction Agents (Pipeline A - Domain Extraction)
+```bash
+python src/run_agent_step5.py  # Mechanical properties
+python src/run_agent_step6.py  # Processing routes
+python src/run_agent_step7.py  # Microstructure
+python src/run_agent_step8.py  # Composition
+```
+
+This generates agent-specific JSON files:
+- `*_mech_agent.json` — Mechanical properties extracted
+- `*_processing_agent.json` — Processing routes extracted
+- `*_microstructure_agent.json` — Microstructure data extracted
+- `*_composition_agent.json` — Composition data extracted
+
+#### 4. Run Pipeline B - Validation & Confidence Scoring
 ```bash
 python src/run_pipeline_b.py
 ```
-This adds confidence scores and validation metrics to your extracted data
 
-### Output Files
-- `*_page_text.json` — Raw extracted text by page
-- `*_sections.json` — Auto-segmented document sections
-- `*_tables.json` — Extracted table data
-- `*_agent.json` — Agent-specific extractions
-- `*_evaluated.json` — Final validated output with confidence scores
-- `*.csv` — Cleaned table exports
+**Example output:**
+```
+✅ Pipeline B done: applsci-14-10986-v2
+```
+
+This generates:
+- `*_evaluated.json` — Final validated output with confidence scores and cross-agent verification
+
+### Output Files Location
+All results are saved in **`output/<paper_name>/`**
+
+- `*_sections.json` — Text sections
+- `*_tables.json` — Extracted tables
+- `*_mech_agent.json` — Mechanical properties
+- `*_processing_agent.json` — Processing routes
+- `*_microstructure_agent.json` — Microstructure analysis
+- `*_composition_agent.json` — Composition data
+- `*_evaluated.json` — Final validated results with confidence metrics
+
+### Complete Example Workflow
+```bash
+# Clear previous outputs
+rm -r output\*  # Windows
+# rm -r output/*  # macOS/Linux
+
+# Add your PDFs to data/raw_pdfs/
+
+# Run the complete pipeline
+python src/main.py
+python src/run_agent_step5.py
+python src/run_agent_step6.py
+python src/run_agent_step7.py
+python src/run_agent_step8.py
+python src/run_pipeline_b.py
+
+# Check results
+# output/paper1/
+# output/paper2/
+# etc...
+```
 
 ## Why MatExtractAI?
 
@@ -222,13 +285,6 @@ This adds confidence scores and validation metrics to your extracted data
 | **Cost** | ❌ API/subscription fees | ✅ One-time setup, zero runtime costs |
 | **Confidence Scoring** | ❌ Not available | ✅ Detailed metrics from cross-validation |  
 
-
-## Documentation
-
-- [Architecture Details](docs/ARCHITECTURE.md) — Deep dive into pipeline design
-- [Agent Guide](docs/AGENTS.md) — How to customize extraction agents
-- [API Reference](docs/API.md) — Integration guide
-- [Examples](examples/) — Sample workflows and use cases
 
 ## Future Work
 
