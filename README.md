@@ -16,8 +16,6 @@ With a focus on **scientific rigor, traceability, and reproducibility**, MatExtr
 - Materials informatics platforms
 - Cross-paper meta-analysis
 
-
-
 ## Key Features
 
 | Feature | Description |
