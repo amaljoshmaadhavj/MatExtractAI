@@ -20,30 +20,34 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="container mx-auto px-4 py-4 max-w-7xl">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto px-6 py-4 max-w-7xl">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center text-white text-sm font-bold">
-              M
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 bg-primary flex items-center justify-center rounded-lg shadow-sm group-hover:scale-105 transition-transform">
+              <span className="text-white font-bold text-lg">M</span>
             </div>
-            <span className="hidden sm:inline">MatExtractAI</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-bold text-lg text-foreground tracking-tight">MatExtract</span>
+              <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-primary/80">Scientific AI</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-foreground/70 hover:text-foreground transition-colors">
-              Home
-            </Link>
-            <Link href="/upload" className="text-foreground/70 hover:text-foreground transition-colors">
-              Upload
-            </Link>
-            <Link href="/progress" className="text-foreground/70 hover:text-foreground transition-colors">
-              Progress
-            </Link>
-            <Link href="/results" className="text-foreground/70 hover:text-foreground transition-colors">
-              Results
-            </Link>
+          <nav className="hidden md:flex items-center gap-10">
+            {[
+              { label: 'Platform', href: '/' },
+              { label: 'Extract', href: '/upload' },
+              { label: 'Archive', href: '/results' }
+            ].map((link) => (
+              <Link 
+                key={link.label}
+                href={link.href} 
+                className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           <div className="flex items-center gap-2">

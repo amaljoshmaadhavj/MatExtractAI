@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FileUp, Zap, BarChart3, Lock } from 'lucide-react';
@@ -33,94 +34,127 @@ const features = [
 ];
 
 export default function HomePage() {
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-card via-background to-background">
-      <Header />
-      <PageContainer className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative mb-16 md:mb-24">
-          <div className="absolute inset-0 -z-10 overflow-hidden">
-            <div className="absolute w-96 h-96 bg-primary/5 rounded-full blur-3xl -top-40 -right-40" />
-            <div className="absolute w-96 h-96 bg-accent/5 rounded-full blur-3xl -bottom-40 -left-40" />
-          </div>
+  const [mousePos, setMousePos] = React.useState({ x: '50%', y: '50%' });
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: `${e.clientX - rect.left}px`,
+      y: `${e.clientY - rect.top}px`,
+    });
+  };
+
+  return (
+    <div 
+      className="flex flex-col min-h-screen bg-background selection:bg-primary/10"
+      onMouseMove={handleMouseMove}
+      style={{ '--mouse-x': mousePos.x, '--mouse-y': mousePos.y } as React.CSSProperties}
+    >
+      <Header />
+      <PageContainer className="flex-grow pt-12 md:pt-20">
+        {/* Hero Section */}
+        <section className="relative mb-24 md:mb-32 scientific-grid bg-fixed hero-glow">
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background -z-10" />
+          
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-center mb-16 px-4"
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 text-balance">
-              Extract Material Data
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"> with AI</span>
+            <div className="inline-block px-4 py-1.5 mb-8 rounded-full bg-primary/5 border border-primary/20 text-xs font-semibold tracking-widest text-primary uppercase">
+              Domain-Specific AI Orchestration
+            </div>
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight text-foreground uppercase">
+              Accelerate Materials <br/>
+              <span className="text-primary border-l-4 border-primary pl-4 inline-block mt-1">Informatics.</span>
             </h1>
-            <p className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto text-balance">
-              MatExtractAI intelligently analyzes scientific papers and extracts material properties, composition data, and experimental results automatically.
+            <p className="text-xl text-foreground/60 max-w-2xl mx-auto leading-relaxed font-medium">
+              A specialized multi-agent platform for high-fidelity extraction of structural, mechanical, and compositional data from scientific literature.
             </p>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-5 justify-center mb-24"
           >
-            <Link href="/upload" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full">
-                Get Started
+            <Link href="/upload">
+              <Button size="lg" className="h-14 px-10 text-base font-semibold shadow-xl shadow-primary/20">
+                Begin Extraction
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              Learn More
+            <Button size="lg" variant="outline" className="h-14 px-10 text-base font-semibold border-2">
+              Platform Overview
             </Button>
           </motion.div>
 
-          {/* Stats */}
+          {/* Technical Milestones */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-3 gap-4 mb-12"
+            transition={{ duration: 1, delay: 0.4 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto border-t border-border pt-16"
           >
             {[
-              { label: 'Papers Processed', value: '10K+', color: 'text-primary' },
-              { label: 'Accuracy Rate', value: '99.8%', color: 'text-accent' },
-              { label: 'Availability', value: '24/7', color: 'text-primary' },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                className="text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-              >
-                <p className={`text-2xl md:text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-                <p className="text-foreground/60 text-sm">{stat.label}</p>
-              </motion.div>
+              { title: 'Automated Ingestion', desc: 'Neural parsing of multi-column PDF layouts and embedded tables.', color: 'text-primary' },
+              { title: 'Multi-Agent Logic', desc: 'Specialized sub-agents for Mechanical vs. Compositional validation.', color: 'text-primary' },
+              { title: 'Local Infrastructure', desc: 'Secure local model execution with zero-retention data policies.', color: 'text-primary' },
+            ].map((strength, index) => (
+              <div key={index} className="px-4">
+                <h4 className="text-base font-bold mb-3 tracking-tight text-foreground">{strength.title}</h4>
+                <p className="text-sm text-foreground/50 leading-relaxed font-medium">{strength.desc}</p>
+              </div>
             ))}
           </motion.div>
         </section>
 
         {/* Features Section */}
-        <section className="mb-20 md:mb-32">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
-              Powerful Features
-            </h2>
-            <p className="text-foreground/60 text-lg max-w-2xl mx-auto">
-              Everything you need to extract and analyze material data efficiently.
-            </p>
-          </motion.div>
+        <section className="mb-32">
+          <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-4">
+            <div className="max-w-xl text-left">
+              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-4">
+                Built for the Modern Lab.
+              </h2>
+              <p className="text-lg text-foreground/50 font-medium">
+                Streamline your data pipeline with features designed for materials scientists.
+              </p>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {features.map((feature, index) => (
               <FeatureCard key={index} {...feature} index={index} />
+            ))}
+          </div>
+        </section>
+
+        {/* Workflow Section */}
+        <section className="mb-32 max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold tracking-tight text-foreground mb-4">
+              The Analytical Pipeline.
+            </h2>
+            <p className="text-foreground/50 font-medium">
+              From raw scientific literature to structured materials datasets.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-4">
+            {[
+              { step: '01', title: 'Ingestion', desc: 'Secure upload and layout-aware PDF decoding.' },
+              { step: '02', title: 'Orchestration', desc: 'Multi-agent analysis of text, tables, and images.' },
+              { step: '03', title: 'Validation', desc: 'Cross-referencing data points for scientific accuracy.' },
+              { step: '04', title: 'Export', desc: 'Structured JSON/CSV output for research workflows.' }
+            ].map((item, idx) => (
+              <div key={idx} className="workflow-step group">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                  Phase {item.step}
+                </span>
+                <h4 className="font-bold text-foreground mb-2">{item.title}</h4>
+                <p className="text-sm text-foreground/50 leading-relaxed">{item.desc}</p>
+              </div>
             ))}
           </div>
         </section>
@@ -128,23 +162,29 @@ export default function HomePage() {
         {/* CTA Section */}
         <section className="mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="glass-effect p-8 md:p-12 rounded-lg text-center border border-primary/20"
+            className="p-12 md:p-20 rounded-2xl text-center bg-primary/[0.02] border border-primary/10 relative overflow-hidden group"
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Ready to Get Started?
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -mr-32 -mt-32" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+            
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">
+              Ready to automate your <br/>
+              <span className="text-primary italic">Literature Review?</span>
             </h2>
-            <p className="text-foreground/70 mb-6 text-lg">
-              Upload your first document and see how MatExtractAI can streamline your research.
+            <p className="text-foreground/60 mb-10 text-lg max-w-xl mx-auto font-medium">
+              Join research labs accelerating discovery with structured data extraction.
             </p>
-            <Link href="/upload" className="inline-block">
-              <Button size="lg">
-                Upload PDF Now
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/upload">
+                <Button size="lg" className="h-14 px-12 text-base font-bold shadow-2xl shadow-primary/20 hover:scale-105 transition-transform">
+                  Get Started Locally
+                </Button>
+              </Link>
+            </div>
           </motion.div>
         </section>
       </PageContainer>
