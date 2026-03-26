@@ -1,27 +1,53 @@
+# Environment variables - NEVER commit these files
+.env
+.env.local
+.env.*.local
+
+# Credentials & Secrets
+credentials.json
+secrets/
+private_key.pem
+.aws/
+
+# Node/NPM
+node_modules/
+npm-debug.log
+yarn-debug.log
+pnpm-debug.log
+.next/
+dist/
+build/
+
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.egg-info/
-
-# Virtual environment
-.venv/
 venv/
-
-# Environment variables
-.env
-
-# OS files
-.DS_Store
-Thumbs.db
+.venv/
+env/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Logs
-*.log
+# OS
+.DS_Store
+Thumbs.db
 
-# Optional: large PDFs (keep if needed)
-# data/raw_pdfs/*.pdf
+# Data directories (uploaded files & results)
+uploads/
+results/
+logs/
+
+# MongoDB
+.mongodb/
+.mongo_*
+
+# Build artifacts
+backend/bin/
+backend/dist/
