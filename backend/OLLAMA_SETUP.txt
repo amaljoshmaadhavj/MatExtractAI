@@ -1,6 +1,5 @@
 """
 OLLAMA INTEGRATION SETUP GUIDE
-==============================
 
 This document explains the OLLAMA integration in MatExtractAI backend.
 
@@ -97,7 +96,7 @@ Check .env file:
 ```
 OLLAMA_HOST=http://localhost:11435
 OLLAMA_MODEL=mistral
-MONGODB_URL=mongodb+srv://extract:amal1234@cluster0.46awm2j.mongodb.net/...
+MONGODB_URL=mongodb+srv://username:password@cluster0.mongodb.net/...
 ```
 
 ### Step 5: Test OLLAMA Integration
