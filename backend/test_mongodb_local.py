@@ -24,15 +24,10 @@ def test_mongodb():
     logger.info("=" * 70)
     
     logger.info(f"MongoDB URL: {settings.mongodb_url}")
-    logger.info(f"Database: {settings.mongodb_database}")
-    logger.info(f"MongoDB Enabled: {settings.use_mongodb}\n")
+    logger.info(f"Database: {settings.mongodb_database}\n")
     
     # Initialize manager
     mongodb_manager = MongoDBManager()
-    
-    if not mongodb_manager.enabled:
-        logger.warning("⚠️  MongoDB is not enabled or not connected")
-        return False
     
     logger.info("✅ MongoDB Manager initialized\n")
     

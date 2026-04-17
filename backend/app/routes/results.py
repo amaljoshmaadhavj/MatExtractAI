@@ -13,7 +13,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 job_service = JobService()
 file_manager = FileManager()
-mongodb_manager = MongoDBManager() if settings.use_mongodb else None
+mongodb_manager = MongoDBManager()  # MongoDB Atlas (optional with fallback to file storage)
 
 
 @router.get("/results/{job_id}")

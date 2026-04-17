@@ -2,6 +2,7 @@
 
 import logging
 import json
+import asyncio
 from typing import Dict, Any, Optional
 import ollama
 
@@ -17,40 +18,86 @@ class OllamaService:
         """Initialize OLLAMA service."""
         self.host = settings.ollama_host
         self.model = settings.ollama_model
+        self.available = False
         logger.info(f"[OLLAMA] Initializing with host={self.host}, model={self.model}")
         
-    def extract_mechanical_properties(self, sections: Dict[str, str], tables: list) -> Dict[str, Any]:
+        # Check OLLAMA availability
+        self._check_ollama_availability()
+    
+    def _check_ollama_availability(self):
+        """Check if OLLAMA is available."""
+        try:
+            import urllib.request
+            import json as json_lib
+            
+            req = urllib.request.Request(f"{self.host}/api/tags")
+            response = urllib.request.urlopen(req, timeout=2)
+            
+            if response.status == 200:
+                data = json_lib.loads(response.read().decode('utf-8'))
+                models = data.get("models", [])
+                self.available = True
+                logger.info(f"[OLLAMA] ✅ OLLAMA available at {self.host}")
+                logger.info(f"[OLLAMA] Available models: {[m.get('name') for m in models]}")
+            else:
+                logger.warning(f"[OLLAMA] ⚠️ OLLAMA returned status code {response.status}")
+                self.available = False
+        except Exception as e:
+            logger.warning(f"[OLLAMA] ⚠️ OLLAMA not available at {self.host}: {e}")
+            logger.warning(f"[OLLAMA] ⚠️ Will use fallback mock data for extraction")
+            self.available = False
+        
+    async def extract_mechanical_properties(self, sections: Dict[str, str], tables: list) -> Dict[str, Any]:
         """
-        Extract mechanical properties using OLLAMA.
+        Extract mechanical properties using OLLAMA asynchronously.
         
         Args:
             sections: Dictionary of document sections
             tables: List of extracted tables
             
         Returns:
-            Dictionary with extracted mechanical properties
+            Dictionary with extracted mechanical properties including evidence
         """
         try:
             logger.info("[OLLAMA] Extracting mechanical properties...")
+            
+            # Check OLLAMA availability
+            if not self.available:
+                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
+                return self._mock_mechanical_properties()
             
             # Prepare context from sections
             results_text = sections.get("results", "")
             methods_text = sections.get("methods", "")
             
-            # Prepare table info
+            logger.info(f"[OLLAMA] Using Results section: {len(results_text)} chars")
+            logger.info(f"[OLLAMA] Using Methods section: {len(methods_text)} chars")
+            
+            # Check if we have any meaningful text
+            if not results_text and not methods_text:
+                logger.warning("[OLLAMA] No results or methods text found, using mock data")
+                return self._mock_mechanical_properties()
+            
+            # Prepare table info with actual table content
             table_info = ""
             if tables:
-                table_info = f"Available {len(tables)} table(s) from document"
+                table_info = f"\n\nTABLES FROM DOCUMENT:\n"
+                for idx, (table_text, context) in enumerate(tables, 1):
+                    table_info += f"\nTable {idx}:\n{table_text[:500]}\n"
+                logger.info(f"[OLLAMA] Including {len(tables)} table(s) in prompt")
+            else:
+                logger.info("[OLLAMA] No tables found in document")
             
             prompt = f"""
 Extract mechanical properties from the following research paper content.
+IMPORTANT: Look for numeric values in TABLES and narrative text sections.
+For each property found, note the source (section name, table number, or figure).
 
 METHODS:
 {methods_text[:1000]}
 
 RESULTS:
 {results_text[:1000]}
-
 {table_info}
 
 Extract the following properties if mentioned:
@@ -72,13 +119,19 @@ Return ONLY valid JSON with this structure:
       "grain_size_um": null,
       "hardness": null,
       "elastic_modulus_gpa": null,
-      "confidence": 0.85
+      "confidence": 0.85,
+      "source": "Table 1 or Section name",
+      "evidence": "Brief description of where this was found"
     }}
   ]
 }}
 """.strip()
             
-            response = ollama.generate(
+            logger.info(f"[OLLAMA] Sending prompt to model {self.model} at {self.host}")
+            
+            # Run ollama.generate in thread pool to avoid blocking
+            response = await asyncio.to_thread(
+                ollama.generate,
                 model=self.model,
                 prompt=prompt,
                 stream=False,
@@ -86,43 +139,76 @@ Return ONLY valid JSON with this structure:
             )
             
             response_text = response.get("response", "").strip()
+            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
             
             # Extract JSON from response
             try:
                 result = json.loads(response_text)
-                logger.info(f"[OLLAMA] Mechanical properties extracted: {len(result.get('properties', []))} items")
+                # Ensure evidence is present
+                for prop in result.get("properties", []):
+                    if "evidence" not in prop:
+                        prop["evidence"] = prop.get("source", "Unknown source")
+                
+                logger.info(f"[OLLAMA] ✅ Mechanical properties extracted: {len(result.get('properties', []))} items")
                 return {
                     "extraction_status": "success",
-                    "extracted_data": result.get("properties", [])
+                    "extracted_data": result.get("properties", []),
+                    "agent_name": "mechanical_properties_agent"
                 }
-            except json.JSONDecodeError:
-                logger.warning(f"[OLLAMA] Could not parse JSON response: {response_text[:100]}")
+            except json.JSONDecodeError as je:
+                logger.warning(f"[OLLAMA] Could not parse JSON response: {response_text[:200]}")
+                logger.warning(f"[OLLAMA] JSON Error: {je}")
                 return self._mock_mechanical_properties()
                 
         except Exception as e:
             logger.error(f"[OLLAMA] Error extracting mechanical properties: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return self._mock_mechanical_properties()
     
-    def extract_composition(self, sections: Dict[str, str]) -> Dict[str, Any]:
+    async def extract_composition(self, sections: Dict[str, str], tables: list = None) -> Dict[str, Any]:
         """
-        Extract alloy composition using OLLAMA.
+        Extract alloy composition using OLLAMA asynchronously.
         
         Args:
             sections: Dictionary of document sections
+            tables: List of extracted tables (optional)
             
         Returns:
-            Dictionary with extracted composition data
+            Dictionary with extracted composition data including evidence
         """
         try:
             logger.info("[OLLAMA] Extracting composition...")
             
+            # Check OLLAMA availability
+            if not self.available:
+                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
+                return self._mock_composition()
+            
             intro_text = sections.get("introduction", "") or sections.get("materials", "")
+            
+            logger.info(f"[OLLAMA] Using Introduction/Materials section: {len(intro_text)} chars")
+            
+            # Check if we have any meaningful text
+            if not intro_text:
+                logger.warning("[OLLAMA] No introduction or materials text found, using mock data")
+                return self._mock_composition()
+            
+            # Prepare table info with actual table content
+            table_info = ""
+            if tables:
+                table_info = f"\n\nTABLES FROM DOCUMENT:\n"
+                for idx, (table_text, context) in enumerate(tables, 1):
+                    table_info += f"\nTable {idx}:\n{table_text[:500]}\n"
             
             prompt = f"""
 Extract alloy composition from this research paper section.
+IMPORTANT: Look for composition data in TABLES and narrative sections.
+Note the source section where this information was found.
 
 CONTENT:
 {intro_text[:1500]}
+{table_info}
 
 Extract alloy compositions in format like:
 - Al-Cu-Mg alloy
@@ -136,13 +222,19 @@ Return ONLY valid JSON:
       "alloy_name": "AZ31",
       "composition_elements": ["Al", "Zn"],
       "composition_percent": {{"Al": "3%", "Zn": "1%"}},
-      "confidence": 0.90
+      "confidence": 0.90,
+      "source": "Introduction or Materials section",
+      "evidence": "Alloy composition as specified in materials section"
     }}
   ]
 }}
 """.strip()
             
-            response = ollama.generate(
+            logger.info(f"[OLLAMA] Sending prompt to model {self.model}")
+            
+            # Run ollama.generate in thread pool to avoid blocking
+            response = await asyncio.to_thread(
+                ollama.generate,
                 model=self.model,
                 prompt=prompt,
                 stream=False,
@@ -150,42 +242,75 @@ Return ONLY valid JSON:
             )
             
             response_text = response.get("response", "").strip()
+            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
             
             try:
                 result = json.loads(response_text)
-                logger.info(f"[OLLAMA] Composition extracted: {len(result.get('alloys', []))} items")
+                # Ensure evidence is present
+                for alloy in result.get("alloys", []):
+                    if "evidence" not in alloy:
+                        alloy["evidence"] = alloy.get("source", "Unknown source")
+                
+                logger.info(f"[OLLAMA] ✅ Composition extracted: {len(result.get('alloys', []))} items")
                 return {
                     "extraction_status": "success",
-                    "extracted_data": result.get("alloys", [])
+                    "extracted_data": result.get("alloys", []),
+                    "agent_name": "composition_agent"
                 }
-            except json.JSONDecodeError:
-                logger.warning(f"[OLLAMA] Could not parse composition JSON")
+            except json.JSONDecodeError as je:
+                logger.warning(f"[OLLAMA] Could not parse composition JSON: {response_text[:200]}")
+                logger.warning(f"[OLLAMA] JSON Error: {je}")
                 return self._mock_composition()
                 
         except Exception as e:
             logger.error(f"[OLLAMA] Error extracting composition: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return self._mock_composition()
     
-    def extract_processing(self, sections: Dict[str, str]) -> Dict[str, Any]:
+    async def extract_processing(self, sections: Dict[str, str], tables: list = None) -> Dict[str, Any]:
         """
-        Extract processing routes using OLLAMA.
+        Extract processing routes using OLLAMA asynchronously with evidence tracking.
         
         Args:
             sections: Dictionary of document sections
+            tables: List of extracted tables (optional)
             
         Returns:
-            Dictionary with extracted processing information
+            Dictionary with extracted processing information including evidence
         """
         try:
             logger.info("[OLLAMA] Extracting processing routes...")
             
+            # Check OLLAMA availability
+            if not self.available:
+                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
+                return self._mock_processing()
+            
             methods_text = sections.get("methods", "") or sections.get("experimental", "")
+            
+            logger.info(f"[OLLAMA] Using Methods section: {len(methods_text)} chars")
+            
+            # Check if we have any meaningful text
+            if not methods_text:
+                logger.warning("[OLLAMA] No methods text found, using mock data")
+                return self._mock_processing()
+            
+            # Prepare table info with actual table content
+            table_info = ""
+            if tables:
+                table_info = f"\n\nTABLES FROM DOCUMENT:\n"
+                for idx, (table_text, context) in enumerate(tables, 1):
+                    table_info += f"\nTable {idx}:\n{table_text[:500]}\n"
             
             prompt = f"""
 Extract material processing information from this section.
+IMPORTANT: Look for processing parameters in TABLES and narrative sections.
+Include source section and evidence for each process step found.
 
 CONTENT:
 {methods_text[:1500]}
+{table_info}
 
 Extract processing steps like:
 - Temperature (°C)
@@ -202,13 +327,19 @@ Return ONLY valid JSON:
         {{"step": "hot rolling", "temperature_c": 350, "duration_h": 2}},
         {{"step": "annealing", "temperature_c": 400, "duration_h": 4}}
       ],
-      "confidence": 0.85
+      "confidence": 0.85,
+      "source": "Methods section",
+      "evidence": "Processing sequence as described in materials preparation"
     }}
   ]
 }}
 """.strip()
             
-            response = ollama.generate(
+            logger.info(f"[OLLAMA] Sending prompt to model {self.model}")
+            
+            # Run ollama.generate in thread pool to avoid blocking
+            response = await asyncio.to_thread(
+                ollama.generate,
                 model=self.model,
                 prompt=prompt,
                 stream=False,
@@ -216,42 +347,74 @@ Return ONLY valid JSON:
             )
             
             response_text = response.get("response", "").strip()
+            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
             
             try:
                 result = json.loads(response_text)
-                logger.info(f"[OLLAMA] Processing extracted: {len(result.get('processing_routes', []))} items")
+                # Ensure evidence is present
+                for route in result.get("processing_routes", []):
+                    if "evidence" not in route:
+                        route["evidence"] = route.get("source", "Unknown source")
+                
+                logger.info(f"[OLLAMA] ✅ Processing extracted: {len(result.get('processing_routes', []))} items")
                 return {
                     "extraction_status": "success",
-                    "extracted_data": result.get("processing_routes", [])
+                    "extracted_data": result.get("processing_routes", []),
+                    "agent_name": "processing_agent"
                 }
-            except json.JSONDecodeError:
-                logger.warning(f"[OLLAMA] Could not parse processing JSON")
+            except json.JSONDecodeError as je:
+                logger.warning(f"[OLLAMA] Could not parse processing JSON: {response_text[:200]}")
+                logger.warning(f"[OLLAMA] JSON Error: {je}")
                 return self._mock_processing()
                 
         except Exception as e:
             logger.error(f"[OLLAMA] Error extracting processing: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return self._mock_processing()
     
-    def extract_microstructure(self, sections: Dict[str, str]) -> Dict[str, Any]:
+    async def extract_microstructure(self, sections: Dict[str, str], tables: list = None) -> Dict[str, Any]:
         """
-        Extract microstructure information using OLLAMA.
+        Extract microstructure information using OLLAMA asynchronously with evidence tracking.
         
         Args:
             sections: Dictionary of document sections
             
         Returns:
-            Dictionary with extracted microstructure data
+            Dictionary with extracted microstructure data including evidence
         """
         try:
             logger.info("[OLLAMA] Extracting microstructure...")
             
+            # Check OLLAMA availability
+            if not self.available:
+                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
+                return self._mock_microstructure()
+            
             results_text = sections.get("results", "") or sections.get("microstructure", "")
+            
+            logger.info(f"[OLLAMA] Using Results section: {len(results_text)} chars")
+            
+            # Check if we have any meaningful text
+            if not results_text:
+                logger.warning("[OLLAMA] No results or microstructure text found, using mock data")
+                return self._mock_microstructure()
+            
+            # Prepare table info with actual table content
+            table_info = ""
+            if tables:
+                table_info = f"\n\nTABLES FROM DOCUMENT:\n"
+                for idx, (table_text, context) in enumerate(tables, 1):
+                    table_info += f"\nTable {idx}:\n{table_text[:500]}\n"
             
             prompt = f"""
 Extract microstructure characteristics from this research section.
+IMPORTANT: Look for microstructure data in TABLES and narrative sections.
+Include source and evidence for each characteristic found.
 
 CONTENT:
 {results_text[:1500]}
+{table_info}
 
 Extract microstructure features like:
 - Grain size (μm)
@@ -268,13 +431,19 @@ Return ONLY valid JSON:
       "recrystallized": null,
       "texture": "description",
       "morphology": "equiaxed or elongated",
-      "confidence": 0.80
+      "confidence": 0.80,
+      "source": "Results section",
+      "evidence": "Microstructure details from SEM/EBSD analysis"
     }}
   ]
 }}
 """.strip()
             
-            response = ollama.generate(
+            logger.info(f"[OLLAMA] Sending prompt to model {self.model}")
+            
+            # Run ollama.generate in thread pool to avoid blocking
+            response = await asyncio.to_thread(
+                ollama.generate,
                 model=self.model,
                 prompt=prompt,
                 stream=False,
@@ -282,20 +451,30 @@ Return ONLY valid JSON:
             )
             
             response_text = response.get("response", "").strip()
+            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
             
             try:
                 result = json.loads(response_text)
-                logger.info(f"[OLLAMA] Microstructure extracted: {len(result.get('microstructures', []))} items")
+                # Ensure evidence is present
+                for micro in result.get("microstructures", []):
+                    if "evidence" not in micro:
+                        micro["evidence"] = micro.get("source", "Unknown source")
+                
+                logger.info(f"[OLLAMA] ✅ Microstructure extracted: {len(result.get('microstructures', []))} items")
                 return {
                     "extraction_status": "success",
-                    "extracted_data": result.get("microstructures", [])
+                    "extracted_data": result.get("microstructures", []),
+                    "agent_name": "microstructure_agent"
                 }
-            except json.JSONDecodeError:
-                logger.warning(f"[OLLAMA] Could not parse microstructure JSON")
+            except json.JSONDecodeError as je:
+                logger.warning(f"[OLLAMA] Could not parse microstructure JSON: {response_text[:200]}")
+                logger.warning(f"[OLLAMA] JSON Error: {je}")
                 return self._mock_microstructure()
                 
         except Exception as e:
             logger.error(f"[OLLAMA] Error extracting microstructure: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return self._mock_microstructure()
     
     @staticmethod

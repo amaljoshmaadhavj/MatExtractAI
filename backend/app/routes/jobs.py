@@ -12,7 +12,7 @@ from app.core.utils import get_time_estimate
 router = APIRouter()
 logger = logging.getLogger(__name__)
 job_service = JobService()
-mongodb_manager = MongoDBManager() if settings.use_mongodb else None
+mongodb_manager = MongoDBManager()  # MongoDB Atlas (optional with fallback to file storage)
 
 
 @router.get("/jobs/{job_id}/status")

@@ -11,16 +11,30 @@ logger = logging.getLogger(__name__)
 
 
 class MongoDBManager:
-    """Manager for MongoDB operations."""
+    """Manager for MongoDB Atlas operations (Optional with fallback)."""
     
     def __init__(self):
-        self.client = MongoDBClient.get_instance()
-        self.db = self.client.db
-        self.enabled = self.db is not None and settings.use_mongodb
+        try:
+            self.client = MongoDBClient.get_instance()
+            self.db = self.client.db
+            self.enabled = self.db is not None
+            
+            if self.enabled:
+                logger.info("✅ MongoDB Manager initialized with MongoDB Atlas")
+            elif getattr(settings, 'mongodb_enabled', True):
+                # Only warn if MongoDB was supposed to be enabled but failed
+                logger.debug("📂 Using file-based storage for job/result persistence")
+            else:
+                # MongoDB is explicitly disabled
+                logger.debug("📂 MongoDB disabled - using file-based storage")
+        except Exception as e:
+            logger.warning(f"⚠️  MongoDB initialization error: {e} - using file-based fallback")
+            self.db = None
+            self.enabled = False
     
     def save_results(self, results: dict) -> bool:
         """
-        Save extraction results to MongoDB Atlas.
+        Save extraction results to MongoDB Atlas (with fallback to file storage).
         
         Args:
             results: Results dictionary with job_id
@@ -29,7 +43,7 @@ class MongoDBManager:
             True if successful
         """
         if not self.enabled:
-            logger.debug("MongoDB not enabled, skipping results save")
+            logger.debug("MongoDB not available, file storage will handle this")
             return False
         
         try:
@@ -55,15 +69,15 @@ class MongoDBManager:
             logger.info(f"✅ Results saved to MongoDB Atlas for job {job_id}")
             return True
         except PyMongoError as e:
-            logger.error(f"❌ MongoDB Atlas error saving results: {e}")
+            logger.warning(f"⚠️  MongoDB save failed, file storage will handle: {e}")
             return False
         except Exception as e:
-            logger.error(f"❌ Error saving results to MongoDB Atlas: {e}")
+            logger.warning(f"⚠️  Error saving to MongoDB: {e}, file storage will handle")
             return False
     
     def get_results(self, job_id: str) -> Optional[dict]:
         """
-        Retrieve extraction results from MongoDB Atlas.
+        Retrieve extraction results from MongoDB Atlas (with fallback).
         
         Args:
             job_id: Job ID
@@ -72,7 +86,7 @@ class MongoDBManager:
             Results dictionary or None
         """
         if not self.enabled:
-            logger.debug("MongoDB not enabled")
+            logger.debug("MongoDB not available, file storage will handle this")
             return None
         
         try:
@@ -80,22 +94,21 @@ class MongoDBManager:
             document = collection.find_one({'job_id': job_id})
             
             if document:
-                # Remove MongoDB internal _id field
                 document.pop('_id', None)
                 logger.info(f"✅ Retrieved results from MongoDB Atlas for job {job_id}")
                 return document.get('data')
             
-            logger.warning(f"⚠️ No results found in MongoDB Atlas for job {job_id}")
+            logger.warning(f"⚠️  No results found in MongoDB Atlas for job {job_id}")
             return None
         except Exception as e:
-            logger.error(f"❌ Error retrieving results from MongoDB Atlas: {e}")
+            logger.warning(f"⚠️  Error retrieving from MongoDB: {e}, file storage will handle")
             return None
     
     def save_job_status(self, job_id: str, filename: str, status: str, 
                        progress: int = 0, current_step: str = "", 
                        error_message: Optional[str] = None) -> bool:
         """
-        Save job status to MongoDB.
+        Save job status to MongoDB Atlas (with fallback).
         
         Args:
             job_id: Job ID
@@ -109,7 +122,7 @@ class MongoDBManager:
             True if successful
         """
         if not self.enabled:
-            logger.debug("MongoDB not enabled, skipping job status save")
+            logger.debug("MongoDB not available, file storage will handle this")
             return False
         
         try:
@@ -131,15 +144,15 @@ class MongoDBManager:
                 upsert=True
             )
             
-            logger.info(f"Saved job status for {job_id} to MongoDB")
+            logger.info(f"✅ Saved job status for {job_id} to MongoDB Atlas")
             return True
         except Exception as e:
-            logger.error(f"Error saving job status to MongoDB: {e}")
+            logger.warning(f"⚠️  Error saving job status to MongoDB: {e}, file storage will handle")
             return False
     
     def get_job_status(self, job_id: str) -> Optional[dict]:
         """
-        Retrieve job status from MongoDB.
+        Retrieve job status from MongoDB Atlas (with fallback).
         
         Args:
             job_id: Job ID
@@ -148,6 +161,7 @@ class MongoDBManager:
             Job status dictionary or None
         """
         if not self.enabled:
+            logger.debug("MongoDB not available, file storage will handle this")
             return None
         
         try:
@@ -156,17 +170,19 @@ class MongoDBManager:
             
             if document:
                 document.pop('_id', None)
+                logger.info(f"✅ Retrieved job status from MongoDB Atlas for job {job_id}")
                 return document
             
+            logger.warning(f"⚠️ No job status found in MongoDB Atlas for job {job_id}")
             return None
         except Exception as e:
-            logger.error(f"Error retrieving job status from MongoDB: {e}")
+            logger.warning(f"⚠️  Error retrieving from MongoDB: {e}, file storage will handle")
             return None
     
     def update_job_progress(self, job_id: str, progress: int, 
                            current_step: str = "") -> bool:
         """
-        Update job progress in real-time.
+        Update job progress in real-time on MongoDB Atlas (with fallback).
         
         Args:
             job_id: Job ID
@@ -177,6 +193,7 @@ class MongoDBManager:
             True if successful
         """
         if not self.enabled:
+            logger.debug("MongoDB not available, file storage will handle this")
             return False
         
         try:
@@ -191,14 +208,15 @@ class MongoDBManager:
                     }
                 }
             )
+            logger.debug(f"✅ Job progress updated: {job_id} - {progress}% - {current_step}")
             return True
         except Exception as e:
-            logger.error(f"Error updating job progress: {e}")
+            logger.warning(f"⚠️  Error updating job progress: {e}, file storage will handle")
             return False
     
     def delete_results(self, job_id: str) -> bool:
         """
-        Delete results from MongoDB.
+        Delete results from MongoDB Atlas (with fallback).
         
         Args:
             job_id: Job ID
@@ -207,30 +225,32 @@ class MongoDBManager:
             True if successful
         """
         if not self.enabled:
+            logger.debug("MongoDB not available, file storage will handle this")
             return False
         
         try:
             self.db['results'].delete_one({'job_id': job_id})
             self.db['jobs'].delete_one({'job_id': job_id})
-            logger.info(f"Deleted job {job_id} from MongoDB")
+            logger.info(f"✅ Deleted job {job_id} from MongoDB Atlas")
             return True
         except Exception as e:
-            logger.error(f"Error deleting job from MongoDB: {e}")
+            logger.warning(f"⚠️  Error deleting job: {e}, file storage will handle")
             return False
     
     def list_jobs(self, status: Optional[str] = None, 
                  limit: int = 100) -> List[dict]:
         """
-        List jobs from MongoDB.
+        List jobs from MongoDB Atlas (with fallback).
         
         Args:
             status: Filter by status (optional)
             limit: Maximum number of results
             
         Returns:
-            List of job documents
+            List of job documents or empty list
         """
         if not self.enabled:
+            logger.debug("MongoDB not available, file storage will handle this")
             return []
         
         try:
@@ -243,7 +263,8 @@ class MongoDBManager:
             for job in jobs:
                 job.pop('_id', None)
             
+            logger.info(f"✅ Retrieved {len(jobs)} jobs from MongoDB Atlas")
             return jobs
         except Exception as e:
-            logger.error(f"Error listing jobs from MongoDB: {e}")
+            logger.warning(f"⚠️  Error listing jobs: {e}, file storage will handle")
             return []

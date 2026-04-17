@@ -46,8 +46,8 @@ def test_agent_service():
     try:
         agent_service = AgentService()
         
-        if agent_service.ollama:
-            logger.info("✅ Agent Service initialized with OLLAMA")
+        if agent_service.ollama_service:
+            logger.info("✅ Agent Service initialized with OLLAMA service")
         else:
             logger.warning("⚠️ Agent Service initialized without OLLAMA (fallback mode)")
         
@@ -66,23 +66,19 @@ def test_extraction_with_mock():
     try:
         agent_service = AgentService()
         
-        # Mock sections
-        mock_sections = {
-            "abstract": "This paper studies magnesium alloys...",
-            "introduction": "AZ31 is a Mg+3%Al+1%Zn alloy...",
-            "materials": "Materials were prepared by casting and rolling...",
-            "methods": "Hot rolling at 400°C for 2 hours followed by annealing at 350°C...",
-            "results": "The grain size was measured as 15 μm. Yield strength: 170 MPa...",
-            "discussion": "The mechanical properties indicate good ductility...",
-            "conclusion": "AZ31 shows promising properties for applications..."
+        # Mock payload
+        payload = {
+            "text": "AZ31 Mg alloy yield strength: 170 MPa. UTS: 240 MPa. Grain size 15 um.",
+            "tables": {"tables": []}
         }
         
-        mock_tables = []
+        import asyncio
         
         logger.info("Running all agents with mock data...")
-        results = agent_service.run_all_agents(mock_sections, mock_tables)
+        # Fix: run_all_agents is async and takes one dict argument
+        results = asyncio.run(agent_service.run_all_agents(payload))
         
-        logger.info(f"✅ Extraction completed with status: {results.get('extraction_status')}")
+        logger.info("✅ Extraction completed")
         
         # Show summary
         logger.info(f"  - Mechanical Properties: {len(results.get('mechanical_properties', {}).get('extracted_data', []))} items")

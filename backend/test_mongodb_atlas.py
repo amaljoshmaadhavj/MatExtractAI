@@ -28,7 +28,6 @@ def test_connection():
     # Display settings
     logger.info(f"Database URL: {settings.mongodb_url}")
     logger.info(f"Database Name: {settings.mongodb_database}")
-    logger.info(f"MongoDB Enabled: {settings.use_mongodb}")
     
     # Test connection
     try:

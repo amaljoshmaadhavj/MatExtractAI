@@ -30,12 +30,10 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     
-    # MongoDB - Local for development, change to MongoDB Atlas if needed
-    # Local: mongodb_url: str = "mongodb://localhost:27017"
-    # Atlas: mongodb_url: str = "mongodb+srv://user:password@cluster.mongodb.net/database?retryWrites=true&w=majority"
-    mongodb_url: str = "mongodb://localhost:27017"
+    # MongoDB Atlas (Disabled)
+    mongodb_enabled: bool = False
+    mongodb_url: str = ""
     mongodb_database: str = "mat_extract_ai"
-    use_mongodb: bool = True
     
     @field_validator('debug', mode='before')
     @classmethod
@@ -45,15 +43,6 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ('true', '1', 'yes')
         return False
-    
-    @field_validator('use_mongodb', mode='before')
-    @classmethod
-    def validate_use_mongodb(cls, v):
-        if isinstance(v, bool):
-            return v
-        if isinstance(v, str):
-            return v.lower() in ('true', '1', 'yes')
-        return True
     
     class Config:
         env_file = ".env"

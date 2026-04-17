@@ -3,10 +3,12 @@
 import logging
 import json
 import traceback
+import asyncio
 from pathlib import Path
 from app.services.job_service import JobService
 from app.services.extraction_service import ExtractionService
 from app.services.agent_service import AgentService
+from app.services.validation_service import ValidationService
 from app.storage.file_manager import FileManager
 from app.storage.mongodb_manager import MongoDBManager
 from app.config import settings
@@ -100,45 +102,49 @@ def process_pdf_job(job_id: str, pdf_path: str):
             agent_service = AgentService()
             sections = extraction_result.get("sections", {})
             tables = extraction_result.get("tables", [])
+            full_text = extraction_result.get("text", "")
             
-            logger.info(f"[WORKER] Running agents on {len(sections)} sections and {len(tables)} tables")
+            # Ensure sections has all expected keys
+            sections_dict = {
+                "title": sections.get("title", ""),
+                "abstract": sections.get("abstract", ""),
+                "introduction": sections.get("introduction", ""),
+                "methods": sections.get("methods", ""),
+                "results": sections.get("results", ""),
+                "discussion": sections.get("discussion", ""),
+                "conclusion": sections.get("conclusion", ""),
+                "composition": sections.get("composition", ""),
+                "processing": sections.get("processing", ""),
+                "microstructure": sections.get("microstructure", ""),
+                "text": full_text
+            }
             
-            # Run each agent individually with progress updates
+            logger.info(f"[WORKER] Running agents on {len(full_text)} chars of text and {len(tables)} tables")
+            
+            # Create async context for running async agent methods
             logger.info(f"[WORKER] Running mechanical properties agent...")
-            mechanical_properties = agent_service._run_mechanical_properties(sections, tables)
+            mechanical_properties = asyncio.run(agent_service._run_mechanical_properties(sections_dict, tables))
             job_service.update_status(job_id, "processing", progress=70, current_step="Mechanical properties agent completed")
             mongodb_manager.update_job_progress(job_id, 70, "Mechanical properties agent completed")
             
             logger.info(f"[WORKER] Running composition agent...")
-            composition = agent_service._run_composition(sections)
+            composition = asyncio.run(agent_service._run_composition(sections_dict, tables))
             job_service.update_status(job_id, "processing", progress=75, current_step="Composition agent completed")
             mongodb_manager.update_job_progress(job_id, 75, "Composition agent completed")
             
             logger.info(f"[WORKER] Running processing agent...")
-            processing = agent_service._run_processing(sections)
+            processing = asyncio.run(agent_service._run_processing(sections_dict, tables))
             job_service.update_status(job_id, "processing", progress=80, current_step="Processing agent completed")
             mongodb_manager.update_job_progress(job_id, 80, "Processing agent completed")
             
             logger.info(f"[WORKER] Running microstructure agent...")
-            microstructure = agent_service._run_microstructure(sections)
+            microstructure = asyncio.run(agent_service._run_microstructure(sections_dict, tables))
             job_service.update_status(job_id, "processing", progress=85, current_step="Microstructure agent completed")
             mongodb_manager.update_job_progress(job_id, 85, "Microstructure agent completed")
             
-            logger.info(f"[WORKER] Running tables extraction...")
-            tables_data = agent_service._run_tables(tables)
-            job_service.update_status(job_id, "processing", progress=90, current_step="Table extraction completed")
-            mongodb_manager.update_job_progress(job_id, 90, "Table extraction completed")
-            
-            logger.info(f"[WORKER] Running validation...")
-            validation = agent_service._run_validation({
-                "mechanical_properties": mechanical_properties,
-                "composition": composition,
-                "processing": processing,
-                "microstructure": microstructure,
-                "tables": tables_data
-            })
-            job_service.update_status(job_id, "processing", progress=95, current_step="Validation completed")
-            mongodb_manager.update_job_progress(job_id, 95, "Validation completed")
+            logger.info(f"[WORKER] All agents completed successfully")
+            job_service.update_status(job_id, "processing", progress=95, current_step="All agents completed")
+            mongodb_manager.update_job_progress(job_id, 95, "All agents completed")
             
             # Assemble final results
             agent_results = {
@@ -146,8 +152,6 @@ def process_pdf_job(job_id: str, pdf_path: str):
                 "composition": composition,
                 "processing": processing,
                 "microstructure": microstructure,
-                "tables": tables_data,
-                "validation": validation,
                 "extraction_status": "completed"
             }
             logger.info(f"[WORKER] Agent service completed successfully")
@@ -157,15 +161,16 @@ def process_pdf_job(job_id: str, pdf_path: str):
             agent_results = {
                 "mechanical_properties": AgentService._mock_mechanical_properties(),
                 "composition": AgentService._mock_composition(),
-                "processing": AgentService._mock_processing(extraction_result.get("sections", {})),
-                "microstructure": AgentService._mock_microstructure(extraction_result.get("sections", {})),
+                "processing": AgentService._mock_processing(),
+                "microstructure": AgentService._mock_microstructure(),
                 "extraction_status": "completed_with_defaults"
             }
         
         # Prepare results
-        logger.info(f"[WORKER] Preparing results")
+        logger.info(f"[WORKER] Preparing final results with comprehensive validation...")
         
         sections = extraction_result.get("sections", {})
+        full_text = extraction_result.get("text", "")
         
         # Extract properties from sections (for display)
         properties = {
@@ -175,43 +180,29 @@ def process_pdf_job(job_id: str, pdf_path: str):
             "discussion": sections.get("discussion", "")[:500]
         }
         
-        # Use validation from agent results if available, otherwise generate from confidences
-        if agent_results.get("validation"):
-            validation = agent_results.get("validation")
-        else:
-            # Fallback: Generate validation scores from agent confidence
-            agent_mech = agent_results.get("mechanical_properties", {}).get("extracted_data", [])
-            agent_comp = agent_results.get("composition", {}).get("extracted_data", [])
-            agent_proc = agent_results.get("processing", {}).get("extracted_data", [])
-            agent_micro = agent_results.get("microstructure", {}).get("extracted_data", [])
-            
-            # Calculate average confidence scores
-            mech_confidence = sum(x.get("confidence", 0) for x in agent_mech) / len(agent_mech) if agent_mech else 0.85
-            comp_confidence = sum(x.get("confidence", 0) for x in agent_comp) / len(agent_comp) if agent_comp else 0.88
-            proc_confidence = sum(x.get("confidence", 0) for x in agent_proc) / len(agent_proc) if agent_proc else 0.80
-            micro_confidence = sum(x.get("confidence", 0) for x in agent_micro) / len(agent_micro) if agent_micro else 0.82
-            
-            validation = {
-                "text_extraction_confidence": 0.95,
-                "table_extraction_confidence": 0.85,
-                "section_parsing_confidence": 0.90,
-                "mechanical_properties_confidence": round(mech_confidence, 2),
-                "composition_confidence": round(comp_confidence, 2),
-                "processing_confidence": round(proc_confidence, 2),
-                "microstructure_confidence": round(micro_confidence, 2),
-                "overall_quality_score": round((0.95 + 0.85 + 0.90 + mech_confidence + comp_confidence + proc_confidence + micro_confidence) / 7, 2),
-                "notes": f"Extracted {len(sections)} sections and {len(extraction_result.get('tables', []))} tables. Ran LLM agents on sections."
-            }
-        
-        results = {
-            "job_id": job_id,
-            "sections": sections,
-            "tables": agent_results.get("tables", extraction_result.get("tables", [])),
+        # Create validation using ValidationService
+        logger.info(f"[WORKER] Running validation service...")
+        validation_service = ValidationService()
+        validation = validation_service.validate_results({
             "mechanical_properties": agent_results.get("mechanical_properties", {}),
             "composition": agent_results.get("composition", {}),
             "processing": agent_results.get("processing", {}),
             "microstructure": agent_results.get("microstructure", {}),
-            "validation": validation
+            "tables": extraction_result.get("tables", [])
+        }, full_text)
+        
+        results = {
+            "job_id": job_id,
+            "sections": sections,
+            "tables": extraction_result.get("tables", []),
+            "mechanical_properties": agent_results.get("mechanical_properties", {}),
+            "composition": agent_results.get("composition", {}),
+            "processing": agent_results.get("processing", {}),
+            "microstructure": agent_results.get("microstructure", {}),
+            "validation": validation,
+            "extraction_status": "completed",
+            "extraction_timestamp": extraction_result.get("extraction_timestamp", ""),
+            "page_count": extraction_result.get("page_count", 0)
         }
         
         # Save results to MongoDB and file

@@ -28,19 +28,20 @@ async def lifespan(app: FastAPI):
     logger.info(f"API listening on {settings.api_host}:{settings.api_port}")
     logger.info(f"CORS enabled for: {settings.frontend_url}")
     
-    # Initialize MongoDB
-    if settings.use_mongodb:
-        try:
-            from app.storage.mongodb_client import MongoDBClient
-            mongo_client = MongoDBClient.get_instance()
-            if mongo_client.db is not None:
-                logger.info("✅ MongoDB initialized successfully")
-            else:
-                logger.warning("⚠️ MongoDB connection failed, using file storage fallback")
-        except Exception as e:
-            logger.warning(f"⚠️ Failed to initialize MongoDB: {e}")
-    else:
-        logger.info("💾 Using local file storage (MongoDB disabled)")
+    # Initialize MongoDB Atlas (Optional - with fallback to file storage)
+    try:
+        from app.storage.mongodb_client import MongoDBClient
+        mongo_client = MongoDBClient.get_instance()
+        if mongo_client.db is not None:
+            logger.info("✅ MongoDB Atlas initialized successfully")
+        elif settings.mongodb_enabled:
+            logger.warning("⚠️  MongoDB Atlas not available - application will use file-based storage")
+        # else: MongoDB is disabled, no message needed
+    except Exception as e:
+        if settings.mongodb_enabled:
+            logger.warning(f"⚠️  MongoDB Atlas initialization failed: {e}")
+            logger.warning("Application will use file-based storage as fallback")
+        # else: MongoDB is disabled, no message needed
     
     # Run cleanup on startup
     deleted = cleanup_old_files(settings.upload_path, settings.cleanup_days)
