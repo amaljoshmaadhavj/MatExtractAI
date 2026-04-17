@@ -47,6 +47,50 @@ class OllamaService:
             logger.warning(f"[OLLAMA] ⚠️ Will use fallback mock data for extraction")
             self.available = False
         
+    def _extract_json_from_response(self, response_text: str) -> Dict[str, Any]:
+        """
+        Extract JSON object from OLLAMA response text.
+        Handles cases where OLLAMA returns text with JSON embedded.
+        
+        Args:
+            response_text: Raw response from OLLAMA
+            
+        Returns:
+            Parsed JSON object
+        """
+        # Try direct JSON parsing first
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            pass
+        
+        # Try to extract JSON from markdown code blocks
+        import re
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL)
+        if json_match:
+            try:
+                return json.loads(json_match.group(1))
+            except json.JSONDecodeError:
+                pass
+        
+        # Try to find JSON object by brackets
+        start_idx = response_text.find('{')
+        if start_idx >= 0:
+            # Try to find matching closing bracket
+            bracket_count = 0
+            for i in range(start_idx, len(response_text)):
+                if response_text[i] == '{':
+                    bracket_count += 1
+                elif response_text[i] == '}':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        try:
+                            return json.loads(response_text[start_idx:i+1])
+                        except json.JSONDecodeError:
+                            pass
+        
+        raise json.JSONDecodeError("Could not extract valid JSON from response", response_text, 0)
+    
     async def extract_mechanical_properties(self, sections: Dict[str, str], tables: list) -> Dict[str, Any]:
         """
         Extract mechanical properties using OLLAMA asynchronously.
@@ -69,14 +113,18 @@ class OllamaService:
             # Prepare context from sections
             results_text = sections.get("results", "")
             methods_text = sections.get("methods", "")
+            full_text = sections.get("text", "")
             
             logger.info(f"[OLLAMA] Using Results section: {len(results_text)} chars")
             logger.info(f"[OLLAMA] Using Methods section: {len(methods_text)} chars")
             
             # Check if we have any meaningful text
-            if not results_text and not methods_text:
+            if not results_text and not methods_text and not full_text:
                 logger.warning("[OLLAMA] No results or methods text found, using mock data")
                 return self._mock_mechanical_properties()
+            
+            # Use best available text
+            context_text = results_text if results_text else (methods_text if methods_text else full_text[:2000])
             
             # Prepare table info with actual table content
             table_info = ""
@@ -88,19 +136,17 @@ class OllamaService:
             else:
                 logger.info("[OLLAMA] No tables found in document")
             
-            prompt = f"""
-Extract mechanical properties from the following research paper content.
+            prompt = f"""You are a materials science expert. Extract mechanical properties from the following research paper content.
+
 IMPORTANT: Look for numeric values in TABLES and narrative text sections.
 For each property found, note the source (section name, table number, or figure).
+If no value is found, leave it as null.
 
-METHODS:
-{methods_text[:1000]}
-
-RESULTS:
-{results_text[:1000]}
+DOCUMENT CONTENT:
+{context_text[:1500]}
 {table_info}
 
-Extract the following properties if mentioned:
+TASK: Extract the following properties if mentioned:
 - Yield Strength (MPa)
 - Ultimate Tensile Strength (MPa)
 - Elongation (%)
@@ -108,24 +154,23 @@ Extract the following properties if mentioned:
 - Hardness (HV or HB)
 - Elastic Modulus (GPa)
 
-Return ONLY valid JSON with this structure:
+Return ONLY valid JSON with this exact structure (no extra text):
 {{
   "properties": [
     {{
-      "material": "material name",
-      "yield_strength_mpa": null,
-      "ultimate_tensile_strength_mpa": null,
-      "elongation_percent": null,
-      "grain_size_um": null,
-      "hardness": null,
-      "elastic_modulus_gpa": null,
-      "confidence": 0.85,
-      "source": "Table 1 or Section name",
-      "evidence": "Brief description of where this was found"
+      "material": "exact material name from document",
+      "yield_strength_mpa": null or number,
+      "ultimate_tensile_strength_mpa": null or number,
+      "elongation_percent": null or number,
+      "grain_size_um": null or number,
+      "hardness": null or number,
+      "elastic_modulus_gpa": null or number,
+      "confidence": 0.5 to 1.0,
+      "source": "Table or Section name",
+      "evidence": "Brief quote or description from document"
     }}
   ]
-}}
-""".strip()
+}}""".strip()
             
             logger.info(f"[OLLAMA] Sending prompt to model {self.model} at {self.host}")
             
@@ -140,10 +185,17 @@ Return ONLY valid JSON with this structure:
             
             response_text = response.get("response", "").strip()
             logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
+            logger.debug(f"[OLLAMA] Response preview: {response_text[:300]}")
             
             # Extract JSON from response
             try:
-                result = json.loads(response_text)
+                result = self._extract_json_from_response(response_text)
+                
+                # Validate structure
+                if "properties" not in result or not isinstance(result["properties"], list):
+                    logger.warning(f"[OLLAMA] Invalid response structure: {list(result.keys())}")
+                    return self._mock_mechanical_properties()
+                
                 # Ensure evidence is present
                 for prop in result.get("properties", []):
                     if "evidence" not in prop:
@@ -155,9 +207,9 @@ Return ONLY valid JSON with this structure:
                     "extracted_data": result.get("properties", []),
                     "agent_name": "mechanical_properties_agent"
                 }
-            except json.JSONDecodeError as je:
-                logger.warning(f"[OLLAMA] Could not parse JSON response: {response_text[:200]}")
-                logger.warning(f"[OLLAMA] JSON Error: {je}")
+            except (json.JSONDecodeError, ValueError) as je:
+                logger.warning(f"[OLLAMA] Could not parse JSON response: {response_text[:500]}")
+                logger.warning(f"[OLLAMA] Parse Error: {je}")
                 return self._mock_mechanical_properties()
                 
         except Exception as e:
