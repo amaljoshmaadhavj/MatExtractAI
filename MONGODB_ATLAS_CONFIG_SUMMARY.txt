@@ -10,9 +10,9 @@
 ┃ DATABASE CONFIGURATION                                                  ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-  Database User:        amaljoshmaadhavj
-  Password:             *(hidden)*
-  Cluster:              cluster0.46awm2j.mongodb.net
+  Database User:        [YOUR_USERNAME]
+  Password:             *(NEVER expose in code - use .env)*
+  Cluster:              [YOUR_CLUSTER].mongodb.net
   Database Name:        mat_extract_ai
   Connection Type:      TLS/SSL (Secure)
   Retry Writes:         Enabled
@@ -68,9 +68,9 @@
   
   □ DATABASE USER
     Go to: Security → Database Access
-    → User: amaljoshmaadhavj
+    → User: [YOUR_DATABASE_USER]
     → Status should be "Active"
-    → Password matches: amal2006
+    → Password stored in .env file (never in documentation)
   
   □ ENVIRONMENT SETUP
     $ cd backend
@@ -98,7 +98,7 @@
   Expected Output:
     ✅ MongoDB Atlas connected successfully
        Database: mat_extract_ai
-       Cluster: cluster0.46awm2j
+       Cluster: [YOUR_CLUSTER_NAME]
     Starting MatExtractAI backend...
     API listening on 0.0.0.0:8000
   
@@ -220,8 +220,8 @@
   Error: "Authentication failed"
   Cause: Wrong credentials
   Fix:   1. Go to MongoDB Atlas → Security → Database Access
-         2. Find user "amaljoshmaadhavj"
-         3. Verify password is "amal2006"
+         2. Find your database user (created in MongoDB Atlas)
+         3. Verify password is correct (stored in .env, never in docs)
   
   Error: "Connection refused"
   Cause: Cluster is paused
@@ -327,7 +327,7 @@
 ╚════════════════════════════════════════════════════════════════════════════╝
 
 Configuration Version: 1.0
-Database User: amaljoshmaadhavj
-Cluster: cluster0.46awm2j.mongodb.net
+Database User: [YOUR_DATABASE_USER]
+Cluster: [YOUR_CLUSTER].mongodb.net
 Status: ✅ Production Ready
 Last Updated: April 17, 2026

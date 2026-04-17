@@ -6,7 +6,7 @@ Your MatExtractAI backend is now **running successfully** even though MongoDB At
 
 ### The Issue
 ```
-Error: All nameservers failed to answer the query _mongodb._tcp.cluster0.46awm2j.mongodb.net
+Error: All nameservers failed to answer the query _mongodb._tcp.[CLUSTER_HOSTNAME]
 Cause: [WinError 10051] A socket operation was attempted to an unreachable network
 ```
 
@@ -234,14 +234,17 @@ MongoDB Atlas
 
 ### When MongoDB Comes Online
 ```python
-# .env file - Add MongoDB connection string
-MONGODB_URL=mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrites=true&w=majority
+# .env file - Add MongoDB connection string (NEVER commit this file!)
+MONGODB_URL=[Your mongodb+srv:// connection string from MongoDB Atlas]
 
 # Restart backend
 python main.py
 # Now uses MongoDB Atlas
 # File storage still works as backup
 ```
+
+⚠️ **CRITICAL: Store MongoDB credentials in .env file only. Never commit to git.**
+**Each developer should have their own .env file in .gitignore**
 
 ### When MongoDB Goes Offline
 ```python
@@ -270,13 +273,17 @@ python main.py
 
 ## 📌 Important Notes
 
-### Your Credentials Are Correct!
+### Your Credentials Setup
 ```
-✅ Username: amaljoshmaadhavj
-✅ Password: amal2006  
-✅ Cluster: cluster0.46awm2j.mongodb.net
+✅ Add your MongoDB Atlas credentials to .env file
+✅ .env is in .gitignore and NOT committed to git
+✅ Each developer has their own local .env
 ✅ Database: mat_extract_ai
+✅ Use strong passwords (16+ characters, special chars)
 ```
+
+⚠️ **Your actual credentials should ONLY be in your local .env file**
+**Never share or commit credentials to version control**
 
 The issue is **network connectivity to MongoDB Atlas**, not credentials.
 

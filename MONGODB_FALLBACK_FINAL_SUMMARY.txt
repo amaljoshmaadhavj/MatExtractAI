@@ -78,7 +78,7 @@ This was the KEY fix that enabled the entire graceful fallback system.
 **Start-up Output**:
 ```
 ⚠️  MongoDB Atlas unavailable: ConfigurationError
-   Error: All nameservers failed to answer the query _mongodb._tcp.cluster0.46awm2j.mongodb.net
+   Error: All nameservers failed to answer the query _mongodb._tcp.[CLUSTER_HOSTNAME]
    Application will use file-based storage as fallback
 
 ⚠️  MongoDB Atlas not available - using file-based fallback storage
@@ -110,7 +110,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ### Root Cause
 Connection to MongoDB Atlas blocked at network level:
 ```
-Error: All nameservers failed to answer the query _mongodb._tcp.cluster0.46awm2j.mongodb.net
+Error: All nameservers failed to answer the query _mongodb._tcp.[CLUSTER_HOSTNAME]
 WinError 10051: A socket operation was attempted to an unreachable network
 ```
 

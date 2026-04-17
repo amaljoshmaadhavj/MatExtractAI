@@ -25,7 +25,7 @@ MatExtractAI backend is now **fully functional without MongoDB Atlas**. The appl
 ### Network Connectivity
 ```
 MongoDB Atlas Reachability: ❌ UNREACHABLE
-Error: All nameservers failed to answer the query _mongodb._tcp.cluster0.46awm2j.mongodb.net
+Error: All nameservers failed to answer the query _mongodb._tcp.[CLUSTER_HOSTNAME]
 Reason: Network DNS cannot resolve MongoDB Atlas domain
 
 Immediate Impact: MongoDB operations skipped, using file storage instead
@@ -313,7 +313,7 @@ Result: ✅ PASSED - All error handling works correctly
 ```
 Issue: Cannot reach MongoDB Atlas
 Root Cause: Machine network DNS blocked
-Error: All nameservers failed to answer the query _mongodb._tcp.cluster0.46awm2j.mongodb.net
+Error: All nameservers failed to answer the query _mongodb._tcp.[CLUSTER_HOSTNAME]
 
 Solutions:
   1. Use different network (mobile hotspot, different WiFi)
@@ -327,9 +327,9 @@ Timeline: Can be fixed anytime by changing network
 
 ### 2. MongoDB Credentials (Status: CONFIGURED) ✅
 ```
-Username: amaljoshmaadhavj
-Password: amal2006
-Cluster: cluster0.46awm2j.mongodb.net
+Username: [YOUR_DATABASE_USER]
+Password: [STORED_IN_ENV_FILE]
+Cluster: [YOUR_CLUSTER_NAME].mongodb.net
 Database: mat_extract_ai
 
 Location: backend/.env
@@ -364,7 +364,9 @@ Status: Configured and ready for when network is fixed
 1. **Restore MongoDB Connection**
    ```bash
    # Update .env with MongoDB Atlas URL
-   MONGODB_URL=mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrites=true&w=majority
+   # ⚠️ NEVER commit credentials to repository!
+   # Store this in .env file only (in .gitignore)
+   MONGODB_URL=mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/?retryWrites=true&w=majority
    ```
 2. **Restart Backend** (will auto-connect)
 3. **Test Data Sync** - verify MongoDB receives data

@@ -9,17 +9,19 @@ Your MongoDB Atlas configuration has been successfully implemented across all co
 ## 📋 Current Configuration
 
 ```
-Database User:    amaljoshmaadhavj
-Cluster:          cluster0.46awm2j.mongodb.net
+Database User:    [Your MongoDB Atlas username]
+Cluster:          [Your cluster hostname]
 Database:         mat_extract_ai
 Connection Type:  Secure TLS/SSL
 Region:           [Your cluster region]
 ```
 
-**Connection String (in .env):**
+**Connection String (STORE IN `.env` FILE, NOT IN CODE):**
 ```
-mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URL=[Your complete mongodb+srv:// connection string]
 ```
+
+⚠️ **NEVER commit credentials to git. Use environment variables only.**
 
 ---
 
@@ -71,9 +73,9 @@ mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrite
 ### ✅ Step 3: Verify Database User
 
 1. In MongoDB Atlas, go to: **Security** → **Database Access**
-2. Find user: **amaljoshmaadhavj**
+2. Find your database user
 3. Verify status: **Active** ✅
-4. Password: Should match what you provided (amal2006)
+4. Password: Store securely in .env file (never in documentation)
 
 ### ✅ Step 4: Install Backend Dependencies
 
@@ -111,7 +113,7 @@ Expected:
 ```
 ✅ MongoDB Atlas connected successfully
    Database: mat_extract_ai
-   Cluster: cluster0.46awm2j
+   Cluster: [YOUR_CLUSTER_NAME]
 Starting MatExtractAI backend...
 API listening on 0.0.0.0:8000
 CORS enabled for: http://localhost:3000
@@ -185,7 +187,7 @@ Once all services are running:
              ↓
 ┌──────────────────────────────────┐
 │   MongoDB Atlas (CLOUD)          │
-│   cluster0.46awm2j.mongodb.net:  │
+│   [YOUR_CLUSTER].mongodb.net:    │
 │                                  │
 │   Database: mat_extract_ai       │
 │   ├─ results (collection)        │
@@ -216,7 +218,7 @@ pip install pymongo certifi
 
 ### Issue: "Authentication failed"
 - **Cause:** Wrong username or password
-- **Fix:** Verify `amaljoshmaadhavj` and `amal2006` in MongoDB Atlas
+- **Fix:** Verify database user and credentials in MongoDB Atlas (stored in .env, not in code)
 
 ### Issue: "Connection refused"
 - **Cause:** MongoDB Atlas cluster is paused
@@ -271,7 +273,7 @@ pip install pymongo certifi
 ## 📞 Quick Reference
 
 ```bash
-# Test MongoDB
+# Test MongoDB (with connection string from .env)
 python test_mongodb_atlas.py
 
 # Start backend
@@ -280,12 +282,14 @@ python main.py
 # Start frontend
 cd frontend && pnpm dev
 
-# Check MongoDB status
-mongosh "mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/mat_extract_ai"
+# Check MongoDB status (use MONGODB_URL from .env)
+mongosh "${MONGODB_URL}"
 
 # View MongoDB Atlas
 https://cloud.mongodb.com
 ```
+
+⚠️ **Use environment variables for all credentials**
 
 ---
 

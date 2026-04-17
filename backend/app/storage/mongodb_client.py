@@ -95,7 +95,7 @@ class MongoDBClient:
             logger.warning(f"   Error: {e}")
             logger.warning(f"   Common causes:")
             logger.warning(f"   1. Network firewall blocking MongoDB Atlas")
-            logger.warning(f"   2. DNS cannot resolve cluster0.46awm2j.mongodb.net")
+            logger.warning(f"   2. DNS cannot resolve [YOUR_CLUSTER].mongodb.net")
             logger.warning(f"   3. Corporate network proxy/VPN required")
             logger.warning(f"   4. Cluster IP whitelist does not include your IP")
             logger.warning(f"   Application will use file-based storage as fallback")

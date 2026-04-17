@@ -7,18 +7,19 @@ Your MongoDB Atlas credentials have been successfully configured in the backend.
 ### Your Setup Details
 
 **Database User:**
-- Username: `amaljoshmaadhavj`
-- Cluster: `cluster0.46awm2j.mongodb.net`
+- Username: `[YOUR_DATABASE_USER]`
+- Cluster: `[YOUR_CLUSTER_HOSTNAME]`
 - Database: `mat_extract_ai`
 
 **Connection String Format:**
 ```
-mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 ```
 
-**Location:** `backend/.env`
+**Location:** `backend/.env` (NOT committed to git)
 ```env
-MONGODB_URL=mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+# ⚠️ NEVER commit .env file - store credentials locally only
+MONGODB_URL=mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 MONGODB_DATABASE=mat_extract_ai
 ```
 
@@ -30,7 +31,7 @@ Before running the application, ensure:
 
 ### Step 1: MongoDB Atlas Cluster Configuration ✅
 - [ ] Cluster is running (check MongoDB Atlas dashboard)
-- [ ] Database user `amaljoshmaadhavj` exists
+- [ ] Database user exists
 - [ ] IP whitelist includes your server's IP address:
   - **For Local Development:** Add `0.0.0.0/0` (allows any IP)
   - **For Production:** Add your specific server IP only
@@ -43,8 +44,8 @@ Before running the application, ensure:
 
 ### Step 3: Verify Credentials
 1. Go to **Security** → **Database Access**
-2. Find user `amaljoshmaadhavj`
-3. Verify password matches: `amal2006`
+2. Find your database user
+3. Verify password is set correctly (store in .env only)
 4. Click "Edit" if password needs reset
 
 ### Step 4: Test Connection from Server
@@ -66,7 +67,7 @@ python test_mongodb_atlas.py
 ```
 ✅ MongoDB Atlas connected successfully
    Database: mat_extract_ai
-   Cluster: cluster0.46awm2j
+   Cluster: [YOUR_CLUSTER_NAME]
 ✅ MongoDB Atlas indexes created successfully
 ```
 
@@ -103,7 +104,7 @@ python main.py
 ```
 ✅ MongoDB Atlas connected successfully
    Database: mat_extract_ai
-   Cluster: cluster0.46awm2j
+   Cluster: [YOUR_CLUSTER_NAME]
 Starting MatExtractAI backend...
 API listening on 0.0.0.0:8000
 CORS enabled for: http://localhost:3000
@@ -135,7 +136,7 @@ Look for these messages in backend console:
 ```
 ✅ MongoDB Atlas connected successfully
    Database: mat_extract_ai
-   Cluster: cluster0.46awm2j
+   Cluster: [YOUR_CLUSTER_NAME]
 ```
 
 ### Method 2: Manual Python Test
@@ -174,7 +175,7 @@ print(f"Collections: {client.db.list_collection_names()}")
 ```bash
 # Go to MongoDB Atlas
 # → Security → Database Access
-# → Find user "amaljoshmaadhavj"
+# → Find your database user
 # → Click "Edit" → Reset password
 # → Update .env file with new password
 ```
@@ -228,13 +229,15 @@ Backend (FastAPI)
 
 ### Current Configuration (Development)
 ```env
-MONGODB_URL=mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+# ⚠️ NEVER commit .env to repository
+MONGODB_URL=mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 ```
 
 **⚠️ Important:**
 - Never commit `.env` file to Git
 - `.env` contains database credentials
 - Use `.gitignore` to exclude it
+- Store credentials in environment variables only
 
 ### For Production Deployment
 1. **Use Environment Secrets:**
@@ -291,7 +294,8 @@ python main.py
 python -m pytest tests/ -v
 
 # Check MongoDB with CLI (if mongo shell installed)
-mongosh "mongodb+srv://amaljoshmaadhavj:amal2006@cluster0.46awm2j.mongodb.net/mat_extract_ai"
+# ⚠️ Replace with your actual MongoDB URI from .env
+mongosh "mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/[DATABASE]"
 ```
 
 ---
