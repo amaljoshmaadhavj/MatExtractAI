@@ -9,6 +9,8 @@ from app.services.job_service import JobService
 from app.services.extraction_service import ExtractionService
 from app.services.agent_service import AgentService
 from app.services.validation_service import ValidationService
+from app.services.consolidation_agent import ConsolidationAgent
+from app.services.conflict_resolver import ConflictResolver
 from app.storage.file_manager import FileManager
 from app.storage.mongodb_manager import MongoDBManager
 from app.config import settings
@@ -143,8 +145,8 @@ def process_pdf_job(job_id: str, pdf_path: str):
             mongodb_manager.update_job_progress(job_id, 85, "Microstructure agent completed")
             
             logger.info(f"[WORKER] All agents completed successfully")
-            job_service.update_status(job_id, "processing", progress=95, current_step="All agents completed")
-            mongodb_manager.update_job_progress(job_id, 95, "All agents completed")
+            job_service.update_status(job_id, "processing", progress=88, current_step="Consolidating results from agents")
+            mongodb_manager.update_job_progress(job_id, 88, "Consolidating results from agents")
             
             # Assemble final results
             agent_results = {
@@ -155,6 +157,32 @@ def process_pdf_job(job_id: str, pdf_path: str):
                 "extraction_status": "completed"
             }
             logger.info(f"[WORKER] Agent service completed successfully")
+            
+            # Run consolidation agent to merge and reconcile results
+            logger.info(f"[WORKER] Running master consolidation agent...")
+            try:
+                consolidation_agent = ConsolidationAgent()
+                consolidation_result = consolidation_agent.consolidate(
+                    mechanical_data=mechanical_properties,
+                    composition_data=composition,
+                    processing_data=processing,
+                    microstructure_data=microstructure,
+                    full_document_text=full_text,
+                    document_metadata={
+                        "filename": extraction_result.get("filename", ""),
+                        "page_count": extraction_result.get("page_count", 0)
+                    }
+                )
+                agent_results["consolidation"] = consolidation_result
+                logger.info(f"[WORKER] Consolidation successful: {consolidation_result.get('consolidation_status')}")
+            except Exception as e:
+                logger.error(f"[WORKER] Consolidation agent error: {e}")
+                logger.error(traceback.format_exc())
+                agent_results["consolidation"] = {
+                    "consolidation_status": "failed",
+                    "error": str(e),
+                    "material_records": []
+                }
         except Exception as e:
             logger.error(f"[WORKER] Agent service error (continuing with mock data): {e}")
             logger.error(traceback.format_exc())
@@ -200,6 +228,9 @@ def process_pdf_job(job_id: str, pdf_path: str):
             "processing": agent_results.get("processing", {}),
             "microstructure": agent_results.get("microstructure", {}),
             "validation": validation,
+            "material_records": agent_results.get("consolidation", {}).get("material_records", []),
+            "consolidation_status": agent_results.get("consolidation", {}).get("consolidation_status", "not_run"),
+            "conflict_report": agent_results.get("consolidation", {}).get("conflict_report", {}),
             "extraction_status": "completed",
             "extraction_timestamp": extraction_result.get("extraction_timestamp", ""),
             "page_count": extraction_result.get("page_count", 0)

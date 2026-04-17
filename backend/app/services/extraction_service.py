@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Tuple
 from datetime import datetime
 
 import fitz  # PyMuPDF
+from .table_parser import TableParser, ExtractedTable
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,8 @@ class ExtractionService:
     def __init__(self):
         """Initialize extraction service."""
         logger.info("[EXTRACTION] Extraction service initialized with PyMuPDF")
+        self.table_parser = TableParser()
+        logger.info("[EXTRACTION] TableParser integrated for advanced table extraction")
     
     def extract_text_and_sections(self, pdf_path: Path) -> Dict[str, Any]:
         """Extract text and section information from PDF using PyMuPDF."""
@@ -84,45 +87,47 @@ class ExtractionService:
             raise
     
     def extract_tables(self, pdf_path: Path) -> Dict[str, Any]:
-        """Extract tables from PDF using PyMuPDF and text pattern analysis."""
+        """Extract tables from PDF using advanced TableParser."""
         try:
-            logger.info(f"[EXTRACTION] Starting table extraction from: {pdf_path}")
+            logger.info(f"[EXTRACTION] Starting advanced table extraction from: {pdf_path}")
             
             if not pdf_path.exists():
                 raise FileNotFoundError(f"PDF not found: {pdf_path}")
             
             doc = fitz.open(str(pdf_path))
-            tables = []
-            table_id = 1
+            all_tables = []
             
             for page_num, page in enumerate(doc):
                 text = page.get_text()
-                detected_tables = self._detect_table_patterns(text, page_num + 1)
                 
-                for table_text, context in detected_tables:
-                    parsed_table = self._parse_table_structure(table_text)
-                    
-                    if parsed_table and len(parsed_table) > 1:
-                        tables.append({
-                            "table_id": f"Table_{table_id}",
-                            "page_num": page_num + 1,
-                            "caption": f"Table {table_id}",
-                            "headers": parsed_table[0] if parsed_table else [],
-                            "rows": parsed_table[1:] if len(parsed_table) > 1 else [],
-                            "row_count": len(parsed_table) - 1,
-                            "column_count": len(parsed_table[0]) if parsed_table else 0,
-                            "context": context[:100],
-                            "source": f"Page {page_num + 1}",
-                            "extraction_method": "text_pattern_analysis"
-                        })
-                        table_id += 1
+                # Use advanced TableParser with multiple strategies
+                extracted_tables = self.table_parser.parse_tables_from_text(text, page_num + 1)
+                
+                for table in extracted_tables:
+                    # Convert ExtractedTable dataclass to dict for JSON serialization
+                    table_dict = {
+                        "table_id": table.table_id,
+                        "page_num": table.page_number,
+                        "caption": table.caption,
+                        "headers": table.headers,
+                        "rows": table.rows,
+                        "row_count": table.row_count,
+                        "column_count": table.column_count,
+                        "cell_count": table.cell_count,
+                        "column_types": table.column_types,
+                        "confidence": table.confidence,
+                        "source": table.source,
+                        "extraction_method": table.extraction_method,
+                        "notes": table.notes
+                    }
+                    all_tables.append(table_dict)
             
             doc.close()
             
-            logger.info(f"[EXTRACTION] Table extraction completed: {len(tables)} tables found")
+            logger.info(f"[EXTRACTION] Advanced table extraction completed: {len(all_tables)} tables found")
             return {
-                "tables": tables,
-                "table_count": len(tables),
+                "tables": all_tables,
+                "table_count": len(all_tables),
                 "extraction_status": "success"
             }
             

@@ -18,34 +18,7 @@ class OllamaService:
         """Initialize OLLAMA service."""
         self.host = settings.ollama_host
         self.model = settings.ollama_model
-        self.available = False
         logger.info(f"[OLLAMA] Initializing with host={self.host}, model={self.model}")
-        
-        # Check OLLAMA availability
-        self._check_ollama_availability()
-    
-    def _check_ollama_availability(self):
-        """Check if OLLAMA is available."""
-        try:
-            import urllib.request
-            import json as json_lib
-            
-            req = urllib.request.Request(f"{self.host}/api/tags")
-            response = urllib.request.urlopen(req, timeout=2)
-            
-            if response.status == 200:
-                data = json_lib.loads(response.read().decode('utf-8'))
-                models = data.get("models", [])
-                self.available = True
-                logger.info(f"[OLLAMA] ✅ OLLAMA available at {self.host}")
-                logger.info(f"[OLLAMA] Available models: {[m.get('name') for m in models]}")
-            else:
-                logger.warning(f"[OLLAMA] ⚠️ OLLAMA returned status code {response.status}")
-                self.available = False
-        except Exception as e:
-            logger.warning(f"[OLLAMA] ⚠️ OLLAMA not available at {self.host}: {e}")
-            logger.warning(f"[OLLAMA] ⚠️ Will use fallback mock data for extraction")
-            self.available = False
         
     def _extract_json_from_response(self, response_text: str) -> Dict[str, Any]:
         """
@@ -104,11 +77,6 @@ class OllamaService:
         """
         try:
             logger.info("[OLLAMA] Extracting mechanical properties...")
-            
-            # Check OLLAMA availability
-            if not self.available:
-                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
-                return self._mock_mechanical_properties()
             
             # Prepare context from sections
             results_text = sections.get("results", "")
@@ -172,44 +140,50 @@ Return ONLY valid JSON with this exact structure (no extra text):
   ]
 }}""".strip()
             
-            logger.info(f"[OLLAMA] Sending prompt to model {self.model} at {self.host}")
+            logger.info(f"[OLLAMA] Attempting to call model {self.model} at {self.host}")
             
-            # Run ollama.generate in thread pool to avoid blocking
-            response = await asyncio.to_thread(
-                ollama.generate,
-                model=self.model,
-                prompt=prompt,
-                stream=False,
-                options={"temperature": 0.1}
-            )
-            
-            response_text = response.get("response", "").strip()
-            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
-            logger.debug(f"[OLLAMA] Response preview: {response_text[:300]}")
-            
-            # Extract JSON from response
             try:
-                result = self._extract_json_from_response(response_text)
+                # Run ollama.generate in thread pool to avoid blocking
+                response = await asyncio.to_thread(
+                    ollama.generate,
+                    model=self.model,
+                    prompt=prompt,
+                    stream=False,
+                    options={"temperature": 0.1}
+                )
                 
-                # Validate structure
-                if "properties" not in result or not isinstance(result["properties"], list):
-                    logger.warning(f"[OLLAMA] Invalid response structure: {list(result.keys())}")
+                response_text = response.get("response", "").strip()
+                logger.info(f"[OLLAMA] ✅ LLM call successful. Received response: {len(response_text)} chars")
+                logger.debug(f"[OLLAMA] Response preview: {response_text[:300]}")
+                
+                # Extract JSON from response
+                try:
+                    result = self._extract_json_from_response(response_text)
+                    
+                    # Validate structure
+                    if "properties" not in result or not isinstance(result["properties"], list):
+                        logger.warning(f"[OLLAMA] Invalid response structure: {list(result.keys())}")
+                        return self._mock_mechanical_properties()
+                    
+                    # Ensure evidence is present
+                    for prop in result.get("properties", []):
+                        if "evidence" not in prop:
+                            prop["evidence"] = prop.get("source", "Unknown source")
+                    
+                    logger.info(f"[OLLAMA] ✅ Mechanical properties extracted: {len(result.get('properties', []))} items")
+                    return {
+                        "extraction_status": "success",
+                        "extracted_data": result.get("properties", []),
+                        "agent_name": "mechanical_properties_agent"
+                    }
+                except (json.JSONDecodeError, ValueError) as je:
+                    logger.warning(f"[OLLAMA] Could not parse JSON response: {response_text[:500]}")
+                    logger.warning(f"[OLLAMA] Parse Error: {je}")
                     return self._mock_mechanical_properties()
-                
-                # Ensure evidence is present
-                for prop in result.get("properties", []):
-                    if "evidence" not in prop:
-                        prop["evidence"] = prop.get("source", "Unknown source")
-                
-                logger.info(f"[OLLAMA] ✅ Mechanical properties extracted: {len(result.get('properties', []))} items")
-                return {
-                    "extraction_status": "success",
-                    "extracted_data": result.get("properties", []),
-                    "agent_name": "mechanical_properties_agent"
-                }
-            except (json.JSONDecodeError, ValueError) as je:
-                logger.warning(f"[OLLAMA] Could not parse JSON response: {response_text[:500]}")
-                logger.warning(f"[OLLAMA] Parse Error: {je}")
+                    
+            except (ConnectionError, TimeoutError, OSError) as llm_error:
+                logger.warning(f"[OLLAMA] ⚠️ Could not reach OLLAMA at {self.host}, using mock data")
+                logger.warning(f"[OLLAMA] LLM Error: {llm_error}")
                 return self._mock_mechanical_properties()
                 
         except Exception as e:
@@ -231,11 +205,6 @@ Return ONLY valid JSON with this exact structure (no extra text):
         """
         try:
             logger.info("[OLLAMA] Extracting composition...")
-            
-            # Check OLLAMA availability
-            if not self.available:
-                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
-                return self._mock_composition()
             
             intro_text = sections.get("introduction", "") or sections.get("materials", "")
             
@@ -282,36 +251,42 @@ Return ONLY valid JSON:
 }}
 """.strip()
             
-            logger.info(f"[OLLAMA] Sending prompt to model {self.model}")
-            
-            # Run ollama.generate in thread pool to avoid blocking
-            response = await asyncio.to_thread(
-                ollama.generate,
-                model=self.model,
-                prompt=prompt,
-                stream=False,
-                options={"temperature": 0.1}
-            )
-            
-            response_text = response.get("response", "").strip()
-            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
+            logger.info(f"[OLLAMA] Attempting to call model {self.model}")
             
             try:
-                result = json.loads(response_text)
-                # Ensure evidence is present
-                for alloy in result.get("alloys", []):
-                    if "evidence" not in alloy:
-                        alloy["evidence"] = alloy.get("source", "Unknown source")
+                # Run ollama.generate in thread pool to avoid blocking
+                response = await asyncio.to_thread(
+                    ollama.generate,
+                    model=self.model,
+                    prompt=prompt,
+                    stream=False,
+                    options={"temperature": 0.1}
+                )
                 
-                logger.info(f"[OLLAMA] ✅ Composition extracted: {len(result.get('alloys', []))} items")
-                return {
-                    "extraction_status": "success",
-                    "extracted_data": result.get("alloys", []),
-                    "agent_name": "composition_agent"
-                }
-            except json.JSONDecodeError as je:
-                logger.warning(f"[OLLAMA] Could not parse composition JSON: {response_text[:200]}")
-                logger.warning(f"[OLLAMA] JSON Error: {je}")
+                response_text = response.get("response", "").strip()
+                logger.info(f"[OLLAMA] ✅ LLM call successful. Received response: {len(response_text)} chars")
+                
+                try:
+                    result = json.loads(response_text)
+                    # Ensure evidence is present
+                    for alloy in result.get("alloys", []):
+                        if "evidence" not in alloy:
+                            alloy["evidence"] = alloy.get("source", "Unknown source")
+                    
+                    logger.info(f"[OLLAMA] ✅ Composition extracted: {len(result.get('alloys', []))} items")
+                    return {
+                        "extraction_status": "success",
+                        "extracted_data": result.get("alloys", []),
+                        "agent_name": "composition_agent"
+                    }
+                except json.JSONDecodeError as je:
+                    logger.warning(f"[OLLAMA] Could not parse composition JSON: {response_text[:200]}")
+                    logger.warning(f"[OLLAMA] JSON Error: {je}")
+                    return self._mock_composition()
+                    
+            except (ConnectionError, TimeoutError, OSError) as llm_error:
+                logger.warning(f"[OLLAMA] ⚠️ Could not reach OLLAMA at {self.host}, using mock data")
+                logger.warning(f"[OLLAMA] LLM Error: {llm_error}")
                 return self._mock_composition()
                 
         except Exception as e:
@@ -333,11 +308,6 @@ Return ONLY valid JSON:
         """
         try:
             logger.info("[OLLAMA] Extracting processing routes...")
-            
-            # Check OLLAMA availability
-            if not self.available:
-                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
-                return self._mock_processing()
             
             methods_text = sections.get("methods", "") or sections.get("experimental", "")
             
@@ -387,36 +357,42 @@ Return ONLY valid JSON:
 }}
 """.strip()
             
-            logger.info(f"[OLLAMA] Sending prompt to model {self.model}")
-            
-            # Run ollama.generate in thread pool to avoid blocking
-            response = await asyncio.to_thread(
-                ollama.generate,
-                model=self.model,
-                prompt=prompt,
-                stream=False,
-                options={"temperature": 0.1}
-            )
-            
-            response_text = response.get("response", "").strip()
-            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
+            logger.info(f"[OLLAMA] Attempting to call model {self.model}")
             
             try:
-                result = json.loads(response_text)
-                # Ensure evidence is present
-                for route in result.get("processing_routes", []):
-                    if "evidence" not in route:
-                        route["evidence"] = route.get("source", "Unknown source")
+                # Run ollama.generate in thread pool to avoid blocking
+                response = await asyncio.to_thread(
+                    ollama.generate,
+                    model=self.model,
+                    prompt=prompt,
+                    stream=False,
+                    options={"temperature": 0.1}
+                )
                 
-                logger.info(f"[OLLAMA] ✅ Processing extracted: {len(result.get('processing_routes', []))} items")
-                return {
-                    "extraction_status": "success",
-                    "extracted_data": result.get("processing_routes", []),
-                    "agent_name": "processing_agent"
-                }
-            except json.JSONDecodeError as je:
-                logger.warning(f"[OLLAMA] Could not parse processing JSON: {response_text[:200]}")
-                logger.warning(f"[OLLAMA] JSON Error: {je}")
+                response_text = response.get("response", "").strip()
+                logger.info(f"[OLLAMA] ✅ LLM call successful. Received response: {len(response_text)} chars")
+                
+                try:
+                    result = json.loads(response_text)
+                    # Ensure evidence is present
+                    for route in result.get("processing_routes", []):
+                        if "evidence" not in route:
+                            route["evidence"] = route.get("source", "Unknown source")
+                    
+                    logger.info(f"[OLLAMA] ✅ Processing extracted: {len(result.get('processing_routes', []))} items")
+                    return {
+                        "extraction_status": "success",
+                        "extracted_data": result.get("processing_routes", []),
+                        "agent_name": "processing_agent"
+                    }
+                except json.JSONDecodeError as je:
+                    logger.warning(f"[OLLAMA] Could not parse processing JSON: {response_text[:200]}")
+                    logger.warning(f"[OLLAMA] JSON Error: {je}")
+                    return self._mock_processing()
+                    
+            except (ConnectionError, TimeoutError, OSError) as llm_error:
+                logger.warning(f"[OLLAMA] ⚠️ Could not reach OLLAMA at {self.host}, using mock data")
+                logger.warning(f"[OLLAMA] LLM Error: {llm_error}")
                 return self._mock_processing()
                 
         except Exception as e:
@@ -437,11 +413,6 @@ Return ONLY valid JSON:
         """
         try:
             logger.info("[OLLAMA] Extracting microstructure...")
-            
-            # Check OLLAMA availability
-            if not self.available:
-                logger.warning("[OLLAMA] OLLAMA not available, using mock data")
-                return self._mock_microstructure()
             
             results_text = sections.get("results", "") or sections.get("microstructure", "")
             
@@ -491,36 +462,42 @@ Return ONLY valid JSON:
 }}
 """.strip()
             
-            logger.info(f"[OLLAMA] Sending prompt to model {self.model}")
-            
-            # Run ollama.generate in thread pool to avoid blocking
-            response = await asyncio.to_thread(
-                ollama.generate,
-                model=self.model,
-                prompt=prompt,
-                stream=False,
-                options={"temperature": 0.1}
-            )
-            
-            response_text = response.get("response", "").strip()
-            logger.info(f"[OLLAMA] Received response: {len(response_text)} chars")
+            logger.info(f"[OLLAMA] Attempting to call model {self.model}")
             
             try:
-                result = json.loads(response_text)
-                # Ensure evidence is present
-                for micro in result.get("microstructures", []):
-                    if "evidence" not in micro:
-                        micro["evidence"] = micro.get("source", "Unknown source")
+                # Run ollama.generate in thread pool to avoid blocking
+                response = await asyncio.to_thread(
+                    ollama.generate,
+                    model=self.model,
+                    prompt=prompt,
+                    stream=False,
+                    options={"temperature": 0.1}
+                )
                 
-                logger.info(f"[OLLAMA] ✅ Microstructure extracted: {len(result.get('microstructures', []))} items")
-                return {
-                    "extraction_status": "success",
-                    "extracted_data": result.get("microstructures", []),
-                    "agent_name": "microstructure_agent"
-                }
-            except json.JSONDecodeError as je:
-                logger.warning(f"[OLLAMA] Could not parse microstructure JSON: {response_text[:200]}")
-                logger.warning(f"[OLLAMA] JSON Error: {je}")
+                response_text = response.get("response", "").strip()
+                logger.info(f"[OLLAMA] ✅ LLM call successful. Received response: {len(response_text)} chars")
+                
+                try:
+                    result = json.loads(response_text)
+                    # Ensure evidence is present
+                    for micro in result.get("microstructures", []):
+                        if "evidence" not in micro:
+                            micro["evidence"] = micro.get("source", "Unknown source")
+                    
+                    logger.info(f"[OLLAMA] ✅ Microstructure extracted: {len(result.get('microstructures', []))} items")
+                    return {
+                        "extraction_status": "success",
+                        "extracted_data": result.get("microstructures", []),
+                        "agent_name": "microstructure_agent"
+                    }
+                except json.JSONDecodeError as je:
+                    logger.warning(f"[OLLAMA] Could not parse microstructure JSON: {response_text[:200]}")
+                    logger.warning(f"[OLLAMA] JSON Error: {je}")
+                    return self._mock_microstructure()
+                    
+            except (ConnectionError, TimeoutError, OSError) as llm_error:
+                logger.warning(f"[OLLAMA] ⚠️ Could not reach OLLAMA at {self.host}, using mock data")
+                logger.warning(f"[OLLAMA] LLM Error: {llm_error}")
                 return self._mock_microstructure()
                 
         except Exception as e:

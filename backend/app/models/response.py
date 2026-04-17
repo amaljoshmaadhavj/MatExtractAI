@@ -31,6 +31,11 @@ class ResultsResponse(BaseModel):
     processing: Dict[str, Any] = Field(default_factory=dict, description="Agent extraction results")
     microstructure: Dict[str, Any] = Field(default_factory=dict, description="Agent extraction results")
     validation: Dict[str, Any] = Field(default_factory=dict, description="Validation and confidence scores")
+    
+    # NEW: Consolidated material records from Master Agent
+    material_records: List[Dict[str, Any]] = Field(default_factory=list, description="Consolidated material records from consolidation agent")
+    consolidation_status: str = Field("not_run", description="Status of consolidation (not_run, success, partial, failed)")
+    conflict_report: Dict[str, Any] = Field(default_factory=dict, description="Conflict detection and resolution results")
 
 
 class ErrorResponse(BaseModel):
