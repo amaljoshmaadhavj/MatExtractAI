@@ -2,11 +2,11 @@
 
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, AlertCircle, CheckCircle, File } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle2, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FileUploadZoneProps {
-  onFileSelect?: (file: File) => void;
+  onFileSelect?: (file: File | null) => void;
   selectedFile?: File | null;
 }
 
@@ -17,11 +17,11 @@ export function FileUploadZone({ onFileSelect, selectedFile }: FileUploadZonePro
 
   const validateFile = (file: File) => {
     if (file.type !== 'application/pdf') {
-      setError('Please upload a PDF file');
+      setError('Please upload a valid scientific PDF document');
       return false;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      setError('File size must be less than 50MB');
+    if (file.size > 25 * 1024 * 1024) {
+      setError('Document size exceeds the 25MB limit');
       return false;
     }
     setError(null);
@@ -71,13 +71,13 @@ export function FileUploadZone({ onFileSelect, selectedFile }: FileUploadZonePro
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        animate={isDragActive ? { scale: 0.98 } : { scale: 1 }}
-        className={`relative border-2 border-dashed rounded-lg p-8 md:p-12 transition-all duration-200 cursor-pointer ${
+        animate={isDragActive ? { y: -2 } : { y: 0 }}
+        className={`relative border-2 border-dashed rounded-xl p-10 md:p-16 transition-all duration-200 cursor-pointer text-center ${
           isDragActive
             ? 'border-primary bg-primary/5'
             : selectedFile
-            ? 'border-green-500/50 bg-green-500/5'
-            : 'border-border hover:border-primary/50 hover:bg-primary/5'
+            ? 'border-primary/40 bg-secondary/20'
+            : 'border-border hover:border-primary/50 hover:bg-secondary/10'
         }`}
         onClick={handleClick}
       >
@@ -90,46 +90,31 @@ export function FileUploadZone({ onFileSelect, selectedFile }: FileUploadZonePro
           aria-label="Upload PDF file"
         />
 
-        <div className="flex flex-col items-center justify-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-4">
           {selectedFile ? (
             <>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                className="text-green-500"
-              >
-                <CheckCircle className="w-12 h-12" />
-              </motion.div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground">File Selected</p>
-                <div className="flex items-center gap-2 mt-2 justify-center text-foreground/60 text-sm">
-                  <File className="w-4 h-4" />
-                  <span className="truncate max-w-xs">{selectedFile.name}</span>
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-foreground text-sm">Document Ready</p>
+                <div className="flex items-center gap-2 mt-2 justify-center text-muted-foreground text-xs font-semibold">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-[200px]">{selectedFile.name}</span>
                 </div>
-                <p className="text-xs text-foreground/50 mt-1">
-                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                </p>
               </div>
             </>
           ) : (
             <>
-              <motion.div
-                animate={isDragActive ? { y: -5 } : { y: 0 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                className="text-primary"
-              >
-                <Upload className="w-12 h-12" />
-              </motion.div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground">
-                  Drag and drop your PDF here
+              <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center text-muted-foreground">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-foreground text-sm">
+                  Click or drag document to upload
                 </p>
-                <p className="text-foreground/60 text-sm mt-1">
-                  or click to browse your computer
-                </p>
-                <p className="text-xs text-foreground/50 mt-2">
-                  Max file size: 50MB
+                <p className="text-muted-foreground text-xs mt-2 font-medium">
+                  Scientific PDF documents up to 25MB
                 </p>
               </div>
             </>
@@ -138,24 +123,24 @@ export function FileUploadZone({ onFileSelect, selectedFile }: FileUploadZonePro
 
         {selectedFile && (
           <Button
-            variant="outline"
-            size="sm"
-            className="absolute top-3 right-3"
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 h-8 w-8 rounded-lg hover:bg-background"
             onClick={(e) => {
               e.stopPropagation();
               onFileSelect?.(null);
             }}
           >
-            Clear
+            <X className="w-4 h-4 text-muted-foreground" />
           </Button>
         )}
       </motion.div>
 
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 flex items-center gap-2 text-destructive text-sm"
+          className="mt-4 flex items-center gap-2 text-destructive text-xs font-bold uppercase tracking-wider justify-center"
         >
           <AlertCircle className="w-4 h-4" />
           <span>{error}</span>
@@ -164,3 +149,4 @@ export function FileUploadZone({ onFileSelect, selectedFile }: FileUploadZonePro
     </div>
   );
 }
+

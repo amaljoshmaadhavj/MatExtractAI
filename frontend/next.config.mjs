@@ -1,3 +1,5 @@
+import path from 'path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -12,6 +14,9 @@ const nextConfig = {
   },
   // Ensure consistent port handling
   reactStrictMode: true,
+  turbopack: {
+    root: path.resolve('.'),
+  },
 }
 
 export default nextConfig

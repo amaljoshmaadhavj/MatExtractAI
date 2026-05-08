@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock, Zap } from 'lucide-react';
+import { CheckCircle2, Clock, Loader2, Search } from 'lucide-react';
 
 interface ProgressDisplayProps {
   progress?: number;
@@ -16,77 +16,71 @@ export function ProgressDisplay({
   timeRemaining = 0,
   currentStep = 'Initializing...',
 }: ProgressDisplayProps) {
-  const isProcessing = status === 'processing';
-  const isComplete = status === 'complete';
+  const isProcessing = status === 'processing' || (progress > 0 && progress < 100);
+  const isComplete = status === 'complete' || progress === 100;
 
   return (
-    <div className="w-full space-y-6">
-      {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-foreground">Processing</h3>
-          <span className="text-sm text-foreground/60">{progress}%</span>
+    <div className="w-full space-y-8">
+      {/* Progress Bar Section */}
+      <div className="space-y-3">
+        <div className="flex justify-between items-end">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Extraction Progress</h3>
+            <p className="text-sm font-bold text-foreground">{isComplete ? 'Analysis Finalized' : 'Orchestrating Pipeline'}</p>
+          </div>
+          <span className="text-lg font-black text-primary tabular-nums">{progress}%</span>
         </div>
-        <div className="relative h-3 bg-card rounded-full overflow-hidden border border-border">
+        <div className="relative h-2 bg-secondary rounded-full overflow-hidden border border-border/50">
           <motion.div
-            className="h-full bg-gradient-to-r from-primary to-accent"
+            className="h-full bg-primary"
             initial={{ width: '0%' }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           />
         </div>
       </div>
 
-      {/* Status Indicator */}
-      <div className="flex items-center gap-3">
-        {isComplete && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-          >
-            <CheckCircle className="w-5 h-5 text-green-500" />
-          </motion.div>
+      {/* Detail Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 rounded-xl border border-border/50 bg-secondary/20 flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${isComplete ? 'bg-primary/10 text-primary' : 'bg-background text-muted-foreground'}`}>
+            {isComplete ? (
+              <CheckCircle2 className="w-4 h-4" />
+            ) : isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Clock className="w-4 h-4" />
+            )}
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Current Pipeline Task</p>
+            <p className="text-sm font-bold text-foreground/90">{currentStep}</p>
+          </div>
+        </div>
+
+        {timeRemaining > 0 && isProcessing && (
+          <div className="p-4 rounded-xl border border-border/50 bg-secondary/20 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-background text-muted-foreground">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Estimated Remaining</p>
+              <p className="text-sm font-bold text-foreground/90">~{Math.ceil(timeRemaining)} seconds</p>
+            </div>
+          </div>
         )}
-        {isProcessing && (
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          >
-            <Zap className="w-5 h-5 text-primary" />
-          </motion.div>
-        )}
-        {status === 'idle' && (
-          <Clock className="w-5 h-5 text-foreground/50" />
-        )}
-        <span className="text-foreground text-sm font-medium">
-          {isComplete
-            ? 'Processing complete!'
-            : isProcessing
-            ? 'Processing...'
-            : 'Ready to process'}
-        </span>
       </div>
 
-      {/* Current Step */}
-      <div className="glass-effect p-4 rounded-lg">
-        <p className="text-sm text-foreground/70">
-          <span className="text-foreground/50">Current step: </span>
-          <span className="text-foreground font-medium">{currentStep}</span>
-        </p>
-      </div>
-
-      {/* Time Remaining */}
-      {timeRemaining > 0 && isProcessing && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex items-center gap-2 text-sm text-foreground/60"
-        >
-          <Clock className="w-4 h-4" />
-          <span>Estimated time remaining: {Math.ceil(timeRemaining)}s</span>
-        </motion.div>
+      {/* Log-style feedback */}
+      {!isComplete && (
+        <div className="flex items-center gap-3 px-1">
+          <Search className="w-3.5 h-3.5 text-primary animate-pulse" />
+          <span className="text-[11px] font-medium text-muted-foreground italic">
+            AI models are currently parsing materials tables and mechanical data...
+          </span>
+        </div>
       )}
     </div>
   );
 }
+

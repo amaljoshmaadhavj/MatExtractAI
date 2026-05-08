@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileUp, AlertCircle } from 'lucide-react';
+import { ArrowLeft, FileUp, AlertCircle, Info, CheckCircle2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -34,7 +34,6 @@ export default function UploadPage() {
     setError(null);
     try {
       const response = await uploadPDF(selectedFile);
-      // Redirect to progress page with job ID
       router.push(`/progress?jobId=${response.job_id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
@@ -45,150 +44,164 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-card via-background to-background">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <PageContainer>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-3xl mx-auto"
+          transition={{ duration: 0.4 }}
+          className="max-w-4xl mx-auto"
         >
           {/* Header */}
-          <div className="mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-primary hover:text-accent transition-colors mb-4">
+          <div className="mb-12">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors mb-6">
               <ArrowLeft className="w-4 h-4" />
-              Back to Home
+              Back to Overview
             </Link>
-            <h1 className="text-4xl font-bold mb-2">Upload PDF</h1>
-            <p className="text-foreground/70">
-              Select a scientific paper to analyze and extract material data
+            <h1 className="text-3xl font-bold tracking-tight mb-3">Extract Data</h1>
+            <p className="text-muted-foreground font-medium">
+              Upload a scientific publication to begin the systematic extraction process.
             </p>
           </div>
 
-          {/* Upload Zone */}
-          <div className="mb-12">
-            <FileUploadZone
-              selectedFile={selectedFile}
-              onFileSelect={handleFileSelect}
-            />
-          </div>
-
-          {/* Error Display */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 mb-8 flex gap-3"
-            >
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-red-600 mb-1">Upload Error</h4>
-                <p className="text-red-600/80 text-sm">{error}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Upload Zone */}
+              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+                <FileUploadZone
+                  selectedFile={selectedFile}
+                  onFileSelect={handleFileSelect}
+                />
               </div>
-            </motion.div>
-          )}
 
-          {/* File Info */}
-          {selectedFile && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-effect p-6 rounded-lg mb-8"
-            >
-              <h3 className="font-semibold mb-4 text-foreground">File Details</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-foreground/60">Filename:</span>
-                  <span className="text-foreground font-medium truncate">{selectedFile.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/60">File Size:</span>
-                  <span className="text-foreground font-medium">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/60">Type:</span>
-                  <span className="text-foreground font-medium">{selectedFile.type}</span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Upload Button */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="flex gap-3"
-          >
-            <Button
-              onClick={handleUpload}
-              disabled={!selectedFile || isProcessing}
-              size="lg"
-              className="flex-1 gap-2"
-            >
-              {isProcessing ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <FileUp className="w-5 h-5" />
-                  </motion.div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <FileUp className="w-5 h-5" />
-                  Start Extraction
-                </>
+              {/* Error Display */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-destructive/5 border border-destructive/20 rounded-xl p-4 flex gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-destructive text-sm mb-1">Processing Error</h4>
+                    <p className="text-destructive/80 text-xs font-medium">{error}</p>
+                  </div>
+                </motion.div>
               )}
-            </Button>
-            {selectedFile && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setSelectedFile(null)}
-                disabled={isProcessing}
-              >
-                Clear
-              </Button>
-            )}
-          </motion.div>
 
-          {/* Info Section */}
-          <div className="mt-12 pt-8 border-t border-border">
-            <h3 className="text-lg font-semibold mb-4 text-foreground">
-              What data can we extract?
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="glass-effect p-4 rounded-lg">
-                <h4 className="font-medium text-foreground mb-2">Material Properties</h4>
-                <p className="text-foreground/60 text-sm">
-                  Density, melting point, tensile strength, and thermal properties
-                </p>
-              </div>
-              <div className="glass-effect p-4 rounded-lg">
-                <h4 className="font-medium text-foreground mb-2">Composition Data</h4>
-                <p className="text-foreground/60 text-sm">
-                  Element percentages, doping levels, and chemical formulas
-                </p>
-              </div>
-              <div className="glass-effect p-4 rounded-lg">
-                <h4 className="font-medium text-foreground mb-2">Experimental Results</h4>
-                <p className="text-foreground/60 text-sm">
-                  Test conditions, measurements, and performance metrics
-                </p>
-              </div>
-              <div className="glass-effect p-4 rounded-lg">
-                <h4 className="font-medium text-foreground mb-2">Synthesis Methods</h4>
-                <p className="text-foreground/60 text-sm">
-                  Processing techniques and parameters used in research
-                </p>
+              {/* Upload Button */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || isProcessing}
+                  size="lg"
+                  className="flex-1 h-12 gap-2 rounded-lg font-bold"
+                >
+                  {isProcessing ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <FileUp className="w-4 h-4" />
+                      </motion.div>
+                      Initializing Pipeline...
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="w-4 h-4" />
+                      Begin Systematic Extraction
+                    </>
+                  )}
+                </Button>
+                {selectedFile && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setSelectedFile(null)}
+                    disabled={isProcessing}
+                    className="h-12 rounded-lg"
+                  >
+                    Reset
+                  </Button>
+                )}
               </div>
             </div>
+
+            <aside className="space-y-6">
+              {/* File Info */}
+              {selectedFile ? (
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="professional-card"
+                >
+                  <div className="flex items-center gap-2 mb-4 text-primary">
+                    <FileText className="w-4 h-4" />
+                    <h3 className="font-bold text-sm">Document Metadata</h3>
+                  </div>
+                  <div className="space-y-4 text-xs">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground font-semibold uppercase tracking-wider">Filename</span>
+                      <span className="text-foreground font-bold truncate">{selectedFile.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-y border-border/50">
+                      <span className="text-muted-foreground font-semibold uppercase tracking-wider">Size</span>
+                      <span className="text-foreground font-bold">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground font-semibold uppercase tracking-wider">Status</span>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
+                        Ready
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="professional-card bg-secondary/30">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <h3 className="font-bold text-sm mb-2">Requirements</h3>
+                      <ul className="text-xs text-muted-foreground space-y-2 font-medium">
+                        <li className="flex gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                          Scientific PDF format
+                        </li>
+                        <li className="flex gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                          Max file size 25MB
+                        </li>
+                        <li className="flex gap-2">
+                          <CheckCircle2 className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                          Clear table structures
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Capabilities */}
+              <div className="professional-card">
+                <h3 className="font-bold text-sm mb-4">Pipeline Capabilities</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Mechanical Properties', value: 'Tensile, Hardness, etc.' },
+                    { label: 'Compositional Data', value: 'Elemental %, Doping' },
+                    { label: 'Synthesis Params', value: 'Temp, Pressure, Time' }
+                  ].map((cap, i) => (
+                    <div key={i} className="pb-3 border-b border-border/50 last:border-0 last:pb-0">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{cap.label}</p>
+                      <p className="text-xs font-semibold text-foreground/80">{cap.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
           </div>
         </motion.div>
       </PageContainer>
@@ -196,3 +209,4 @@ export default function UploadPage() {
     </div>
   );
 }
+

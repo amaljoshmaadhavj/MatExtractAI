@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Copy, Check } from 'lucide-react';
+import { Download, Copy, Check, FileJson, Table } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ExportButtonsProps {
@@ -83,75 +83,55 @@ export function ExportButtons({ data, filename = 'extraction-results' }: ExportB
   };
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+    <div className="flex flex-wrap gap-2">
+      <Button
+        onClick={handleCopyToClipboard}
+        variant="outline"
+        size="sm"
+        className={`h-9 px-3 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+          copied ? 'bg-primary/10 border-primary text-primary hover:bg-primary/15' : ''
+        }`}
       >
-        <Button
-          onClick={handleCopyToClipboard}
-          variant={copied ? 'default' : 'outline'}
-          className="gap-2"
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4" />
-              Copied
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4" />
-              Copy JSON
-            </>
-          )}
-        </Button>
-      </motion.div>
+        {copied ? (
+          <Check className="w-3.5 h-3.5" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+        {copied ? 'Copied' : 'Copy'}
+      </Button>
 
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <Button
+        onClick={handleExportJSON}
+        variant="outline"
+        size="sm"
+        className={`h-9 px-3 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+          exported === 'json' ? 'bg-primary/10 border-primary text-primary hover:bg-primary/15' : ''
+        }`}
       >
-        <Button
-          onClick={handleExportJSON}
-          variant={exported === 'json' ? 'default' : 'outline'}
-          className="gap-2"
-        >
-          {exported === 'json' ? (
-            <>
-              <Check className="w-4 h-4" />
-              Exported
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4" />
-              JSON
-            </>
-          )}
-        </Button>
-      </motion.div>
+        {exported === 'json' ? (
+          <Check className="w-3.5 h-3.5" />
+        ) : (
+          <FileJson className="w-3.5 h-3.5" />
+        )}
+        JSON
+      </Button>
 
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <Button
+        onClick={handleExportCSV}
+        variant="outline"
+        size="sm"
+        className={`h-9 px-3 rounded-lg gap-2 text-xs font-bold uppercase tracking-wider transition-all ${
+          exported === 'csv' ? 'bg-primary/10 border-primary text-primary hover:bg-primary/15' : ''
+        }`}
       >
-        <Button
-          onClick={handleExportCSV}
-          variant={exported === 'csv' ? 'default' : 'outline'}
-          className="gap-2"
-        >
-          {exported === 'csv' ? (
-            <>
-              <Check className="w-4 h-4" />
-              Exported
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4" />
-              CSV
-            </>
-          )}
-        </Button>
-      </motion.div>
+        {exported === 'csv' ? (
+          <Check className="w-3.5 h-3.5" />
+        ) : (
+          <Table className="w-3.5 h-3.5" />
+        )}
+        CSV
+      </Button>
     </div>
   );
 }
+

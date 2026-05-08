@@ -25,68 +25,104 @@ export function DataVisualization({
   xAxisKey = 'name',
   yAxisKey = 'value',
   height = 300,
-  showLegend = true,
+  showLegend = false,
 }: DataVisualizationProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="w-full h-64 flex items-center justify-center glass-effect rounded-lg">
-        <p className="text-foreground/60">No data available</p>
+      <div className="w-full h-64 flex items-center justify-center border border-border border-dashed rounded-xl bg-secondary/5">
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No spectral data available</p>
       </div>
     );
   }
 
   const chartConfig = {
-    margin: { top: 5, right: 30, left: 0, bottom: 5 },
+    margin: { top: 10, right: 10, left: -20, bottom: 0 },
   };
 
   return (
     <div className="w-full">
       {title && (
-        <h3 className="text-lg font-semibold mb-4 text-foreground">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-6">
           {title}
         </h3>
       )}
-      <div className="glass-effect p-6 rounded-lg overflow-x-auto">
+      <div className="w-full">
         <ResponsiveContainer width="100%" height={height}>
           {type === 'bar' ? (
             <BarChart data={data} {...chartConfig}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-              <XAxis dataKey={xAxisKey} stroke="var(--color-foreground)" opacity={0.7} />
-              <YAxis stroke="var(--color-foreground)" opacity={0.7} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis 
+                dataKey={xAxisKey} 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={10} 
+                fontWeight={600}
+                tickLine={false}
+                axisLine={false}
+                dy={10}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={10} 
+                fontWeight={600}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'var(--color-card)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '0.5rem',
-                  color: 'var(--color-foreground)',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '0.75rem',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                 }}
-                cursor={{ fill: 'var(--color-primary)', opacity: 0.1 }}
+                cursor={{ fill: 'hsl(var(--primary))', opacity: 0.05 }}
               />
               {showLegend && <Legend />}
-              <Bar dataKey={yAxisKey} fill="var(--color-primary)" opacity={0.8} radius={[8, 8, 0, 0]} />
+              <Bar 
+                dataKey={yAxisKey} 
+                fill="hsl(var(--primary))" 
+                radius={[4, 4, 0, 0]} 
+                barSize={32}
+              />
             </BarChart>
           ) : (
             <LineChart data={data} {...chartConfig}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-              <XAxis dataKey={xAxisKey} stroke="var(--color-foreground)" opacity={0.7} />
-              <YAxis stroke="var(--color-foreground)" opacity={0.7} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis 
+                dataKey={xAxisKey} 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={10} 
+                fontWeight={600}
+                tickLine={false}
+                axisLine={false}
+                dy={10}
+              />
+              <YAxis 
+                stroke="hsl(var(--muted-foreground))" 
+                fontSize={10} 
+                fontWeight={600}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'var(--color-card)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '0.5rem',
-                  color: 'var(--color-foreground)',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '0.75rem',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                 }}
-                cursor={{ fill: 'var(--color-primary)', opacity: 0.1 }}
               />
               {showLegend && <Legend />}
               <Line
                 type="monotone"
                 dataKey={yAxisKey}
-                stroke="var(--color-primary)"
-                dot={{ fill: 'var(--color-primary)', r: 4 }}
-                activeDot={{ r: 6 }}
-                strokeWidth={2}
+                stroke="hsl(var(--primary))"
+                dot={{ fill: 'hsl(var(--primary))', r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, strokeWidth: 0 }}
+                strokeWidth={2.5}
               />
             </LineChart>
           )}
@@ -95,3 +131,4 @@ export function DataVisualization({
     </div>
   );
 }
+
