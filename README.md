@@ -8,7 +8,9 @@
 
 ## Overview
 
-MatExtractAI is a **full-stack intelligent system** that transforms unstructured **materials science research PDFs** into **structured, evidence-backed JSON** using a combination of deterministic parsing and local LLM-based agents. The system features a **modern web interface** (Next.js/React frontend) connected to a **robust FastAPI backend** with MongoDB persistence.
+MatExtractAI is a **full-stack intelligent system** that transforms unstructured **materials science research PDFs** into **structured, evidence-backed JSON** using a combination of deterministic parsing and local LLM-based agents. 
+
+The system features a **sophisticated, enterprise-grade web interface** (Next.js/React) designed for precision and professional research workflows. It moves beyond generic "AI themes" toward a clean, research-oriented aesthetic utilizing a structured **Zinc/Indigo design system**.
 
 With a focus on **scientific rigor, traceability, and reproducibility**, MatExtractAI is purpose-built for:
 - Research data repositories
@@ -21,6 +23,7 @@ With a focus on **scientific rigor, traceability, and reproducibility**, MatExtr
 
 | Feature | Description |
 |---------|-------------|
+| **Professional UI/UX** | **Enterprise-grade design system** using a neutral Zinc/Indigo palette for maximum clarity and precision. |
 | **Intelligent PDF Processing** | Page-wise extraction with automatic section segmentation (Intro, Methods, Results, etc.) |
 | **Advanced Table Parsing** | Multi-strategy table extraction: tabulated, CSV, pipe-delimited, structured pairs with type inference |
 | **Domain-Specific Agents** | 4 specialized LLM agents + 1 master consolidation agent for mechanical properties, composition, processing, & microstructure |
@@ -98,7 +101,7 @@ When agent outputs contradict each other:
 ```
 MatExtractAI/
 │
-├── 📁 backend/                  
+101: ├── 📁 backend/                  
 │   ├── app/                     # FastAPI application
 │   │   ├── core/                # Business logic (workers, utils, exceptions)
 │   │   ├── models/              # Pydantic models & schemas
@@ -230,28 +233,27 @@ MatExtractAI/
 - ✅ **Conflict resolution**: Contradictions automatically detected and resolved
 - ✅ **Confidence metrics**: Per-field and overall extraction confidence scores
 
-## Tech Stack
 
 ## Tech Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
+| **Frontend** | Next.js 15, React 19, TypeScript | Modern, high-performance research interface |
 | **Backend** | Python 3.13+, FastAPI, asyncio | REST API, request handling, orchestration |
-| **Frontend** | TypeScript, Next.js 14+, React 18+ | Modern UI with server-side rendering |
-| **Styling** | Tailwind CSS | Responsive, utility-first CSS |
+| **Design** | Tailwind CSS 4.0, Framer Motion | Professional Zinc/Indigo design system |
 | **Database** | MongoDB Atlas / Local MongoDB | Document storage for results & metadata |
 | **LLM Inference** | Ollama | Local, private LLM execution (qwen2.5:3b model) |
 | **PDF Processing** | PyMuPDF (fitz) | Fast text extraction & page handling |
-| **Table Extraction** | Custom TableParser (Phase 2) | Multi-strategy table detection & parsing |
-| **Data Normalization** | Custom DataNormalizer (Phase 2) | Unit conversion, standardization, validation |
-| **Conflict Resolution** | Custom ConflictResolver (Phase 1) | Tolerance-based conflict detection & resolution |
-| **Consolidation** | Custom ConsolidationAgent (Phase 1) | Master agent for merging 4-agent outputs |
+| **Table Extraction** | Custom TableParser | Multi-strategy table detection & parsing |
+| **Data Normalization** | Custom DataNormalizer | Unit conversion, standardization, validation |
+| **Conflict Resolution** | Custom ConflictResolver | Tolerance-based conflict detection & resolution |
+| **Consolidation** | Custom ConsolidationAgent | Master agent for merging 4-agent outputs |
 | **Pattern Matching** | regex | Deterministic section/entity parsing |
 | **Task Management** | Python asyncio | Parallel job execution & background tasks |
 
 > **System Requirements:**
 > - Python 3.13+
-> - Node.js 18+ (for frontend)
+> - Node.js 20+ (for frontend)
 > - Virtual environment (venv recommended)
 > - MongoDB instance (local or cloud)
 > - Ollama with qwen2.5:3b model loaded locally
@@ -261,7 +263,7 @@ MatExtractAI/
 
 ### Prerequisites
 - Python 3.13+
-- Node.js 18+ (for frontend)
+- Node.js 20+
 - Virtual environment (recommended)
 - MongoDB instance (local or Atlas)
 - Ollama installed with qwen2.5:3b model loaded locally
@@ -291,8 +293,7 @@ pip install -r requirements.txt
 cd frontend
 
 # Install Node dependencies
-pnpm install
-# or: npm install
+npm install
 ```
 
 ### Configuration
@@ -345,8 +346,7 @@ The API will be available at `http://localhost:8000`
 #### 3. Start Frontend (in another terminal)
 ```bash
 cd frontend
-pnpm dev
-# or: npm run dev
+npm run dev
 ```
 
 #### 4. Access Application
@@ -357,7 +357,8 @@ Open browser and navigate to: **`http://localhost:3000`**
 1. **Upload PDF** → Upload research paper via web interface (up to 50 MB)
 2. **Processing** → Real-time progress tracking (text extraction → table parsing → 4 agents → consolidation → normalization)
 3. **Results Display** → View extracted material records with conflict reports and evidence chains
-4. **Export** → Download normalized results in JSON format
+4. **Export** → Download normalized results in JSON or CSV format
+
 
 ## Pipeline Components
 
@@ -406,6 +407,7 @@ Open browser and navigate to: **`http://localhost:3000`**
 ## Development Status
 
 ### ✅ Completed
+- **Enterprise-Grade UI Redesign**: Transitioned to professional Zinc/Indigo design system
 - Phase 1: Conflict resolution & master consolidation agent
 - Phase 2: Advanced table parsing & data normalization
 - Core extraction agents (mechanical, composition, processing, microstructure)
@@ -429,6 +431,23 @@ Open browser and navigate to: **`http://localhost:3000`**
 For comprehensive documentation of implementation phases:
 - **[Phase 1: Conflict Resolution & Consolidation](./PHASE_1_IMPLEMENTATION.md)** — Automatic conflict detection and master agent consolidation
 - **[Phase 2: Table Parsing & Data Normalization](./PHASE_2_IMPLEMENTATION.md)** — Advanced table extraction and unit/name standardization
+
+## Security & Privacy
+
+✅ **Environment Variables** — Never commit `.env` files (added to `.gitignore`)
+✅ **MongoDB Credentials** — Store securely, use strong passwords
+✅ **Local Processing** — All data stays on-premises, no cloud dependencies
+✅ **Secret Scanning** — GitHub Actions monitor for exposed credentials
+
+
+## Author & Contact
+
+**Amaljosh Maadhav J**
+
+- Email: [amal018josephmathi@gmail.com]
+- LinkedIn: [https://www.linkedin.com/in/amaljoshmaadhavj/]
+- GitHub: [https://github.com/amaljoshmaadhavj]
+ame standardization
 
 ## Security & Privacy
 
