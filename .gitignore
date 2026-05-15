@@ -44,6 +44,23 @@ uploads/
 results/
 logs/
 
+# Local test PDFs and documents used for offline testing
+docs_testing/
+
+# Generic logs and temporary files
+*.log
+
+# Test and cache artifacts
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Python build / packaging
+pip-wheel-metadata/
+build/
+
 # MongoDB
 .mongodb/
 .mongo_*

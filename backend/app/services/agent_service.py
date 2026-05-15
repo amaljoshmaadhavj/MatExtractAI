@@ -55,34 +55,68 @@ class AgentService:
     async def _run_mechanical_properties(self, sections: Dict[str, str], tables: Dict[str, Any]) -> Dict[str, Any]:
         """Extract mechanical properties using OLLAMA agent."""
         try:
-            return await self.ollama_service.extract_mechanical_properties(sections, tables)
+            result = await self.ollama_service.extract_mechanical_properties(sections, tables)
+            
+            # Check if extraction failed
+            if result.get("extraction_status") != "success":
+                logger.warning(f"[AGENT] Mechanical properties extraction failed: {result.get('error')}")
+                logger.warning(f"[AGENT] Extraction status: {result.get('extraction_status')}")
+                # Return the actual error status instead of mock data
+                return result
+            
+            return result
         except Exception as e:
             logger.error(f"[AGENT] Error in mechanical properties agent: {e}")
-            return self._mock_mechanical_properties()
+            return {
+                "extraction_status": "error",
+                "extracted_data": [],
+                "error": str(e)
+            }
     
     async def _run_composition(self, sections: Dict[str, str], tables: Dict[str, Any]) -> Dict[str, Any]:
         """Extract composition using OLLAMA agent."""
         try:
-            return await self.ollama_service.extract_composition(sections, tables)
+            result = await self.ollama_service.extract_composition(sections, tables)
+            if result.get("extraction_status") != "success":
+                logger.warning(f"[AGENT] Composition extraction failed: {result.get('error')}")
+            return result
         except Exception as e:
             logger.error(f"[AGENT] Error in composition agent: {e}")
-            return self._mock_composition()
+            return {
+                "extraction_status": "error",
+                "extracted_data": [],
+                "error": str(e)
+            }
     
     async def _run_processing(self, sections: Dict[str, str], tables: Dict[str, Any]) -> Dict[str, Any]:
         """Extract processing parameters using OLLAMA agent."""
         try:
-            return await self.ollama_service.extract_processing(sections, tables)
+            result = await self.ollama_service.extract_processing(sections, tables)
+            if result.get("extraction_status") != "success":
+                logger.warning(f"[AGENT] Processing extraction failed: {result.get('error')}")
+            return result
         except Exception as e:
             logger.error(f"[AGENT] Error in processing agent: {e}")
-            return self._mock_processing()
+            return {
+                "extraction_status": "error",
+                "extracted_data": [],
+                "error": str(e)
+            }
     
     async def _run_microstructure(self, sections: Dict[str, str], tables: Dict[str, Any]) -> Dict[str, Any]:
         """Extract microstructure using OLLAMA agent."""
         try:
-            return await self.ollama_service.extract_microstructure(sections)
+            result = await self.ollama_service.extract_microstructure(sections, tables)
+            if result.get("extraction_status") != "success":
+                logger.warning(f"[AGENT] Microstructure extraction failed: {result.get('error')}")
+            return result
         except Exception as e:
             logger.error(f"[AGENT] Error in microstructure agent: {e}")
-            return self._mock_microstructure()
+            return {
+                "extraction_status": "error",
+                "extracted_data": [],
+                "error": str(e)
+            }
     
     @staticmethod
     def _mock_mechanical_properties() -> Dict[str, Any]:

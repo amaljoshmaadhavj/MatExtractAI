@@ -126,6 +126,13 @@ def process_pdf_job(job_id: str, pdf_path: str):
             # Create async context for running async agent methods
             logger.info(f"[WORKER] Running mechanical properties agent...")
             mechanical_properties = asyncio.run(agent_service._run_mechanical_properties(sections_dict, tables))
+            
+            # Check extraction status
+            mech_status = mechanical_properties.get("extraction_status", "unknown")
+            if mech_status != "success":
+                logger.warning(f"[WORKER] Mechanical properties extraction did not succeed: {mech_status}")
+                logger.warning(f"[WORKER] Error: {mechanical_properties.get('error', 'No error message')}")
+            
             job_service.update_status(job_id, "processing", progress=70, current_step="Mechanical properties agent completed")
             mongodb_manager.update_job_progress(job_id, 70, "Mechanical properties agent completed")
             
@@ -145,10 +152,8 @@ def process_pdf_job(job_id: str, pdf_path: str):
             mongodb_manager.update_job_progress(job_id, 85, "Microstructure agent completed")
             
             logger.info(f"[WORKER] All agents completed successfully")
-            job_service.update_status(job_id, "processing", progress=88, current_step="Consolidating results from agents")
-            mongodb_manager.update_job_progress(job_id, 88, "Consolidating results from agents")
             
-            # Assemble final results
+            # Assemble final results - use ACTUAL agent results, not mock fallback
             agent_results = {
                 "mechanical_properties": mechanical_properties,
                 "composition": composition,
@@ -156,46 +161,42 @@ def process_pdf_job(job_id: str, pdf_path: str):
                 "microstructure": microstructure,
                 "extraction_status": "completed"
             }
-            logger.info(f"[WORKER] Agent service completed successfully")
+            logger.info(f"[WORKER] Agent service completed")
             
-            # Run consolidation agent to merge and reconcile results
-            logger.info(f"[WORKER] Running master consolidation agent...")
-            try:
-                consolidation_agent = ConsolidationAgent()
-                consolidation_result = consolidation_agent.consolidate(
-                    mechanical_data=mechanical_properties,
-                    composition_data=composition,
-                    processing_data=processing,
-                    microstructure_data=microstructure,
-                    full_document_text=full_text,
-                    document_metadata={
-                        "filename": extraction_result.get("filename", ""),
-                        "page_count": extraction_result.get("page_count", 0)
-                    }
-                )
-                agent_results["consolidation"] = consolidation_result
-                logger.info(f"[WORKER] Consolidation successful: {consolidation_result.get('consolidation_status')}")
-            except Exception as e:
-                logger.error(f"[WORKER] Consolidation agent error: {e}")
-                logger.error(traceback.format_exc())
-                agent_results["consolidation"] = {
-                    "consolidation_status": "failed",
-                    "error": str(e),
-                    "material_records": []
-                }
+            # Log extraction status summary
+            mech_status = mechanical_properties.get("extraction_status", "unknown")
+            comp_status = composition.get("extraction_status", "unknown")
+            proc_status = processing.get("extraction_status", "unknown")
+            micro_status = microstructure.get("extraction_status", "unknown")
+            
+            logger.info(f"[WORKER] Extraction summary: mechanical={mech_status}, composition={comp_status}, processing={proc_status}, microstructure={micro_status}")
+            
+            # Skip consolidation agent - it was causing bottlenecks
+            logger.info(f"[WORKER] Skipping consolidation step (results are ready from agents)")
+            agent_results["consolidation"] = {
+                "consolidation_status": "skipped",
+                "material_records": [],
+                "note": "Direct agent results used instead of consolidation"
+            }
         except Exception as e:
-            logger.error(f"[WORKER] Agent service error (continuing with mock data): {e}")
+            # Log error but DON'T fall back to all mock data
+            logger.error(f"[WORKER] Agent service error: {e}")
             logger.error(traceback.format_exc())
+            # Return empty results instead of fake data
             agent_results = {
-                "mechanical_properties": AgentService._mock_mechanical_properties(),
-                "composition": AgentService._mock_composition(),
-                "processing": AgentService._mock_processing(),
-                "microstructure": AgentService._mock_microstructure(),
-                "extraction_status": "completed_with_defaults"
+                "mechanical_properties": {"extraction_status": "error", "extracted_data": [], "error": str(e)},
+                "composition": {"extraction_status": "error", "extracted_data": [], "error": str(e)},
+                "processing": {"extraction_status": "error", "extracted_data": [], "error": str(e)},
+                "microstructure": {"extraction_status": "error", "extracted_data": [], "error": str(e)},
+                "extraction_status": "error"
             }
         
         # Prepare results
         logger.info(f"[WORKER] Preparing final results with comprehensive validation...")
+        
+        # Update progress: validation starting
+        job_service.update_status(job_id, "processing", progress=88, current_step="Validating extraction results")
+        mongodb_manager.update_job_progress(job_id, 88, "Validating extraction results")
         
         sections = extraction_result.get("sections", {})
         full_text = extraction_result.get("text", "")
@@ -238,6 +239,8 @@ def process_pdf_job(job_id: str, pdf_path: str):
         
         # Save results to MongoDB and file
         logger.info(f"[WORKER] Saving results to MongoDB and file")
+        job_service.update_status(job_id, "processing", progress=95, current_step="Saving results")
+        mongodb_manager.update_job_progress(job_id, 95, "Saving results")
         try:
             # Save to MongoDB first (primary storage)
             mongodb_manager.save_results(results)
